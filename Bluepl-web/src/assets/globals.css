@@ -1,0 +1,11 @@
+body {
+    user-select: none;
+    overflow: hidden;
+}
+
+input,
+button,
+select {
+    outline: 0;
+    border: 0;
+}
