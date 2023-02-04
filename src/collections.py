@@ -67,12 +67,13 @@ class Registry(Obj):
     def registry(self, password: str, solt=""):
         """注册该用户"""
         users.create(email=self.email, password=password, solt=solt)
+        del registries[self.id]
 
     def is_available(self):
         """判断是否过期, 如果过期则自动删除, 未过期返回 True"""
         if time.time() - self.time/1000 < self.age:
             return True
-        del registrys[self.id]
+        del registries[self.id]
         return False
 
 
@@ -82,7 +83,7 @@ sessions = collections.get(Session)
 users = collections.get(User)
 # accounts = collections.get(Account)
 
-registrys = Collection(Registry)
+registries = Collection(Registry)
 
 registry_type(Session)
 registry_type(User)

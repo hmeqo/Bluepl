@@ -1,9 +1,6 @@
 import random
 
-try:
-    from .. import mathut as _mathut
-except ImportError:
-    from ahfakit import mathut as _mathut
+from .. import mathut as _mathut
 
 
 class DH(object):

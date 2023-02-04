@@ -8,9 +8,8 @@ import typing as _t
 from flask import Flask, render_template, send_file, send_from_directory, request, Response
 
 from ..ahfakit.simplecrypto import DH
-from ..ahfakit.datautil.form import Field, Form
 from .. import gconfig
-from ..collections import collections, sessions, users, registrys
+from ..collections import collections, sessions, users, registries
 from ..sender.smtp import send_veri_code
 from .status import *
 
@@ -20,8 +19,6 @@ app = Flask(
     root_path=str(gconfig.Dirs.root),
 )
 app.config["JSON_AS_ASCII"] = False
-
-user_form = Form(email=Field(str), password=Field(str))
 
 
 @app.route("/favicon.ico")
@@ -92,8 +89,8 @@ def index():
         return app.make_response(status_101)
 
     # 判断邮箱是否正在注册
-    if email in registrys:
-        registry = registrys.get(email)
+    if email in registries:
+        registry = registries.get(email)
         # 验证是否有效
         if not registry or not registry.is_available():
             return app.make_response(status_601)
@@ -107,12 +104,13 @@ def index():
             solt = "".join(random.choices(string.hexdigits, k=16))
             password = hashlib.md5((password + solt).encode()).hexdigest()
             registry.registry(password, solt)
+            collections.save()
             return app.make_response(status_200)
         return app.make_response(status_102)
 
     # 注册
     veri_code = "".join(random.choices(string.hexdigits, k=5)).upper()
-    registrys.create(email=email, veri_code=veri_code)
+    registries.create(email=email, veri_code=veri_code)
     # 发送验证码
     send_veri_code([email], veri_code)
     return app.make_response(status_102)
