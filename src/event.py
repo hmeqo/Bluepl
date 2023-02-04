@@ -11,6 +11,7 @@ from collections import defaultdict as _defaultdict
 from enum import Enum as _Enum, EnumMeta as _EnumMeta
 import inspect as _inspect
 import typing as _t
+import atexit as _atexit
 
 
 class Event(object):
@@ -70,6 +71,7 @@ class EventType(_Enum, metaclass=EventTypeMeta):
     # On the application close
     CLOSING = EventTypeWrapper(Event)
     CLOSED = EventTypeWrapper(Event)
+    EXIT = EventTypeWrapper(Event)
 
     ERROR = EventTypeWrapper(ExceptionEvent)
 
@@ -163,6 +165,18 @@ def emit(eventtype: EventType, *args, **kwds):
     __event = eventtype.value.type(args, kwds)
     for func in subscribers[eventtype]:
         func(__event)
+    if eventtype in (
+            EventType.START,
+            EventType.CLOSING,
+            EventType.CLOSED,
+            EventType.EXIT):
+        del subscribers[eventtype]
+
+
+@_atexit.register
+def emit_exit():
+    """发送退出事件 (会在Python退出时自动执行)"""
+    emit(EventType.EXIT)
 
 
 # alias

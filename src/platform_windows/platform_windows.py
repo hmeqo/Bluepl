@@ -1,10 +1,7 @@
 import webview
 
-from .. import gconfig, server, database
-from ..database import pydb
+from .. import gconfig, server
 from ..event import EventType, emit
-
-database.set_db(pydb.create_db())
 
 
 class App(object):
@@ -13,10 +10,9 @@ class App(object):
         self.window = webview.create_window(gconfig.App.name, url=server.app)
         self.window.events.closing += self.on_closing  # type: ignore
         self.window.events.closed += self.on_closed  # type: ignore
-        self.gui = "gtk"
 
     def run(self):
-        webview.start(self.on_start, gui=self.gui)
+        webview.start(self.on_start, gui="gtk", debug=gconfig.App.debug)
 
     def on_start(self):
         emit(EventType.START)

@@ -129,6 +129,10 @@ dmypy.json
 .pyre/
 
 # other
+.vscode
+*.code-workspace
+.kivy_venv
 design/.*
 data
-*.code-workspace
+src/sender/sender.py
+test.py

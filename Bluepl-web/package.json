@@ -8,9 +8,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.2.45"
+    "axios": "^1.2.6",
+    "crypto-js": "^4.1.1",
+    "vue": "^3.2.45",
+    "vue-worker": "^1.2.1"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.1.1",
     "@vitejs/plugin-vue": "^4.0.0",
     "autoprefixer": "^10.4.13",
     "postcss": "^8.4.21",

@@ -1,10 +1,9 @@
 from .androidwebview import BrowserApp
 
-from .. import database
-from ..database import pydb
-
-database.set_db(pydb.create_db())
+from .. import gconfig
 
 
-def main():
+def main(debug=False):
+    if debug:
+        gconfig.App.debug = True
     BrowserApp().run()

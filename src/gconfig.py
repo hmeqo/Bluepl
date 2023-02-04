@@ -3,7 +3,7 @@
 from pathlib import Path as _Path
 import sys as _sys
 
-from .ahfakit.datamb import datamb as _datamb
+from .ahfakit.datautil import datamb as _datamb
 
 
 class Dirs(object):
@@ -19,13 +19,13 @@ class Files(object):
     """文件路径"""
 
     icon = Dirs.webroot.joinpath("favicon.ico")
-    db = Dirs.data.joinpath("data.db")
 
 
 class App(object):
     """应用信息"""
 
     name = "Bluepl"
+    debug = False
 
 
 config = _datamb.ArgMapTree({})
