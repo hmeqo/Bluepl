@@ -15,7 +15,7 @@ password = "123456789"
 cd and run command on Bluple-web
 
 ```bash
-Bluple-web> python build.py
+python build.py
 ```
 
 ## Run
