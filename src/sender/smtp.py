@@ -13,7 +13,7 @@ veri_html = """
 """
 
 
-def send_veri_code(receivers: _t.List[str], veri_code: str):
+def send_verification_code(receivers: _t.List[str], veri_code: str):
     smtp.login(sender, password)
     message = MIMEText(veri_html.format(veri_code=veri_code), "html", "UTF-8")
     message["From"] = Header(gconfig.App.name, "UTF-8")

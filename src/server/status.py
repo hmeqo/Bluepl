@@ -1,20 +1,10 @@
-"""
-status:
-    10: session 验证失败
-    101: 密码错误
-    102: 等待验证
-    200: 成功
-    400: 错误
-    401: 频繁
-    600: 失败
-    601: 过期
-"""
-
-status_10 = {"status": 10}
-status_101 = {"status": 101}
-status_102 = {"status": 102}
-status_200 = {"status": 200}
-status_400 = {"status": 400}
-status_401 = {"status": 401}
-status_600 = {"status": 600}
-status_601 = {"status": 601}
+L_not_acount = {"status": 100}
+L_password_error = {"status": 101}
+L_wait_verify = {"status": 102}
+Success_200 = {"status": 200}
+E_param_error = {"status": 400}
+E_out_of_limit = {"status": 401}
+E_net_error = {"status": 404}
+Failed_600 = {"status": 600}
+F_session_error = {"status": 601}
+F_expired = {"status": 602}

@@ -3,6 +3,7 @@ import axios from 'axios'
 import worker from './worker'
 import CryptoJS from 'crypto-js'
 import { sha256hexdigest } from './util'
+import { E_net_error, E_out_of_limit, L_not_acount, L_wait_verify } from './status'
 
 export const servers = [
     {
@@ -46,7 +47,7 @@ class Net {
     api = reactive({
         async validateSession(): Promise<boolean> {
             return await axios.post(
-                '/session',
+                '/session/validate',
                 { id: net.session.id }
             ).then(response => {
                 net.status = 200
@@ -69,7 +70,7 @@ class Net {
             var data = await worker?.postMessage('session')
                 .then(async (data: any) => {
                     return await axios.post(
-                        './session',
+                        './session/create',
                         {
                             g: data.g.toString(),
                             p: data.p.toString(),
@@ -101,11 +102,10 @@ class Net {
             var data = aes.encrypt(JSON.stringify({
                 email: net.user.email,
                 password: net.user.password,
-                veriCode: net.user.veriCode,
             }))
             var digest = await sha256hexdigest(net.session.key + data)
-            var result = await axios.post(
-                '/',
+            var status = await axios.post(
+                '/login',
                 {
                     sessionId: net.session.id,
                     digest: digest,
@@ -113,15 +113,12 @@ class Net {
                 },
             ).then(response => {
                 net.status = 200
-                if (response.data.status == null) {
-                    return 400
-                }
                 return response.data.status
             }).catch(error => {
                 net.status = error.response.status
-                return 400
+                return E_net_error
             })
-            return result
+            return status
         }
     })
     session = reactive({

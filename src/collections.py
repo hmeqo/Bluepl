@@ -4,7 +4,7 @@ import typing as _t
 from .ahfakit.datautil.objcollection import AutoincObjProperty, Collection, CollectionsIO, Obj, ObjProperty, registry_type
 from . import gconfig
 from .event import EventType, subscribe
-from .ahfakit.simplecrypto import AES
+from .ahfakit.simplecrypto.aes import AES
 
 collections = CollectionsIO()
 
@@ -40,10 +40,10 @@ class Session(Obj):
     def flash_time(self):
         self.time = int(time.time() * 1000)
 
-    def encrypt_base64(self, b: bytes):
+    def encrypt(self, b: bytes):
         return self.aes.encrypt(b)
 
-    def decrypt_base64(self, b: bytes):
+    def decrypt(self, b: bytes):
         return self.aes.decrypt(b)
 
 
