@@ -13,7 +13,7 @@ app.init()
 </script>
 
 <template>
-  <div class="flex absolute w-full h-full bg-neutral-50 box-border overflow-auto">
+  <div class="flex absolute w-full h-full bg-primary-900 box-border overflow-auto">
     <NotInternetPrompt></NotInternetPrompt>
     <Loading v-if="!app.inited || user.loggingIn" :pattern="1"></Loading>
     <Login v-if="!user.logined"></Login>

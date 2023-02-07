@@ -25,3 +25,8 @@ run on main directory
 ```bash
 python main_windows.py
 ```
+
+## TODO
+
+- [ ] 完善前后端 Account 交互部分
+- [ ] 前端 Session 过期时自动申请新的 Session
