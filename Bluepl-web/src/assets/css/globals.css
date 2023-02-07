@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     user-select: none;
     overflow: hidden;
@@ -6,7 +10,16 @@ body {
 
 input,
 button,
-select {
+select,
+textarea {
     outline: 0;
     border: 0;
+}
+
+.flex-full-prompt {
+    @apply flex w-full h-full
+}
+
+.flex-full-prompt {
+    @apply z-50 absolute left-0 top-0
 }

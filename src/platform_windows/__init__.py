@@ -1,1 +1,1 @@
-from .platform_windows import *
+from .app import *

@@ -1,10 +1,19 @@
-export const L_not_acount = 100
-export const L_password_error = 101
-export const L_wait_verify = 102
-export const Success_200 = 200
-export const E_param_error = 400
-export const E_out_of_limit = 401
-export const E_net_error = 404
-export const Failed_600 = 600
-export const F_session_error = 601
-export const F_expired = 602
+/** 后端响应的json的status状态码 */
+
+export const S_NOT_ACCOUNT = 100
+
+export const S_WAIT_VERIFY = 101
+
+export const S_SUCCESS_200 = 200
+
+export const S_NOT_INTERNET_ERROR = 400
+
+export const S_PARAM_ERROR = 401
+
+export const S_SESSION_ERROR = 402
+
+export const S_EXPIRED_ERROR = 403
+
+export const S_OUT_OF_LIMIT_ERROR = 404
+
+export const S_PASSWORD_ERROR = 405

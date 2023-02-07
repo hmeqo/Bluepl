@@ -1,9 +1,23 @@
+"""
+Usage:
+
+```
+from validators import required, equals
+form = Form(
+    username=Field(str, validator=[
+        required(on_invalid=lambda v: print("不能为空")),
+        equals("abc", on_invalid=lambda v: print("账号错误")),
+    ]),
+    password=Field(str, equals("123")),
+    test=Field(str, ""),
+)
+print(form.parse({"username": "abc", "password": "123"}))
+```
+"""
+
 import typing as _t
 
-try:
-    from .validators import ValidatorsType, ValidatorType
-except ImportError:
-    from validators import ValidatorsType, ValidatorType
+from .validators import ValidatorsType, ValidatorType
 
 
 class Field(object):
@@ -70,21 +84,3 @@ class Form(object):
         except ValueError:
             return None
         return result
-
-
-def main():
-    from validators import required, equals
-    form = Form(
-        username=Field(str, validator=[
-            required(on_invalid=lambda v: print("不能为空")),
-            equals("abc", on_invalid=lambda v: print("账号错误")),
-        ]),
-        password=Field(str, equals("123")),
-        test=Field(str, ""),
-    )
-    print(form.parse({"username": "abc", "password": "123"}))
-    # print(form.validate({"username": "", "password": "123"}))
-
-
-if __name__ == "__main__":
-    main()

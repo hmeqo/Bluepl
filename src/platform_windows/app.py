@@ -2,12 +2,16 @@ import webview
 
 from .. import gconfig, server
 from ..event import EventType, emit
+from ..database import set_dbapi, pydbapi
+
+set_dbapi(pydbapi.PyDBApi)
 
 
 class App(object):
 
     def __init__(self):
-        self.window = webview.create_window(gconfig.App.name, url=server.app)
+        self.window = webview.create_window(gconfig.App.name, server.app)
+        self.window._http_port = 27640
         self.window.events.closing += self.on_closing  # type: ignore
         self.window.events.closed += self.on_closed  # type: ignore
 

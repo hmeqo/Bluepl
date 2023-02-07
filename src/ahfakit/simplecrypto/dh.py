@@ -37,26 +37,3 @@ class DH(object):
         return pow(n, self.e, self.p)
 
     randint = random.randint
-
-
-def main():
-    bits = 2048
-    p = DH.generate_p(bits)
-    g = DH.generate_g(p)
-
-    ea = DH.randint(p >> 1, p)
-    eb = DH.randint(p >> 1, p)
-
-    dh1 = DH(p, g, ea)
-    dh2 = DH(p, g, eb)
-
-    ya = dh1.step1()
-    yb = dh2.step1()
-
-    ka = dh1.step2(yb)
-    kb = dh2.step2(ya)
-    print(ka, kb)
-
-
-if __name__ == "__main__":
-    main()

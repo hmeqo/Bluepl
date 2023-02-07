@@ -5,6 +5,7 @@ module.exports = {
     './public/**/*.html',
     './src/**/*.{js,jsx,ts,tsx,vue}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       screens: {
@@ -13,7 +14,8 @@ module.exports = {
       colors: {
         primary: {
           '50': 'hsla(0, 0%, 95%, 1)',
-          '900': 'hsla(210, 5%, 10%, 1)',
+          '800': 'hsla(0, 0%, 20%, 1)',
+          '900': 'hsla(210, 0%, 10%, 1)',
         },
         login: {
           '50': 'hsla(120, 0%, 100%, 1)',

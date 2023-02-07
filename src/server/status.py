@@ -1,10 +1,19 @@
-L_not_acount = {"status": 100}
-L_password_error = {"status": 101}
-L_wait_verify = {"status": 102}
-Success_200 = {"status": 200}
-E_param_error = {"status": 400}
-E_out_of_limit = {"status": 401}
-E_net_error = {"status": 404}
-Failed_600 = {"status": 600}
-F_session_error = {"status": 601}
-F_expired = {"status": 602}
+"""响应给前端的状态json"""
+
+S_NOT_ACCOUNT = {"status": 100}
+
+S_WAIT_VERIFY = {"status": 101}
+
+S_SUCCESS_200 = {"status": 200}
+
+S_NOT_INTERNET_ERROR = {"status": 400}
+
+S_PARAM_ERROR = {"status": 401}
+
+S_SESSION_ERROR = {"status": 402}
+
+S_EXPIRED_ERROR = {"status": 403}
+
+S_OUT_OF_LIMIT_ERROR = {"status": 404}
+
+S_PASSWORD_ERROR = {"status": 405}
