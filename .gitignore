@@ -137,3 +137,4 @@ data
 src/sender/sender.py
 src/web
 test.py
+uwsgi.pid

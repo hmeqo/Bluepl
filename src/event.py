@@ -68,9 +68,7 @@ class EventType(_Enum, metaclass=EventTypeMeta):
 
     # On the application start
     START = EventTypeWrapper(Event)
-    # On the application close
-    CLOSING = EventTypeWrapper(Event)
-    CLOSED = EventTypeWrapper(Event)
+    # On the application exit
     EXIT = EventTypeWrapper(Event)
 
     ERROR = EventTypeWrapper(ExceptionEvent)
@@ -167,8 +165,6 @@ def emit(eventtype: EventType, *args, **kwds):
         func(__event)
     if eventtype in (
             EventType.START,
-            EventType.CLOSING,
-            EventType.CLOSED,
             EventType.EXIT):
         del subscribers[eventtype]
 
