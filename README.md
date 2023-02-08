@@ -30,3 +30,4 @@ python main_windows.py
 
 - [ ] 完善前后端 Account 交互部分
 - [ ] 前端 Session 过期时自动申请新的 Session
+- [ ] 判断邮箱是否可用, 以及验证表单

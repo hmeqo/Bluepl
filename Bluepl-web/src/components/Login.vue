@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
-import { user, servers, webapi } from './js/app'
+import { user, servers, webapi } from './js/globals'
 import { S_WAIT_VERIFY } from './js/status';
 
 class FormLogin {
@@ -38,10 +38,13 @@ const formL = reactive(new FormLogin())
     <div class="text-login-400 flex justify-center items-center mt-8 mb-16 text-xl slab:mb-8">登录</div>
     <div class="space-y-8 h-full flex flex-col">
       <label class="input-container">
-        <select class="input-box" name="" id="server" v-model="user.server" :title="user.server"
+        <select v-if="servers.length > 1" class="input-box" name="" id="server" v-model="user.server" :title="user.server"
           @focusin="formL.focusin.server" @focusout="formL.focusout.server">
           <option v-for="server in servers" :value="server.strAddr" :title="server.strAddr">{{ server.name }}
           </option>
+        </select>
+        <select v-else class="input-box" name="" id="" disabled>
+          <option v-for="server in servers" :value="server.strAddr">{{ server.name }}</option>
         </select>
         <div class="input-title" :data-active="formL.actived.server">连接</div>
       </label>

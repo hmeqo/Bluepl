@@ -4,6 +4,8 @@ export const S_NOT_ACCOUNT = 100
 
 export const S_WAIT_VERIFY = 101
 
+export const S_NOT_LOGIN = 110
+
 export const S_SUCCESS_200 = 200
 
 export const S_NOT_INTERNET_ERROR = 400

@@ -4,6 +4,8 @@ S_NOT_ACCOUNT = {"status": 100}
 
 S_WAIT_VERIFY = {"status": 101}
 
+S_NOT_LOGIN = {"status": 110}
+
 S_SUCCESS_200 = {"status": 200}
 
 S_NOT_INTERNET_ERROR = {"status": 400}

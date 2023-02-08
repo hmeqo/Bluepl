@@ -18,7 +18,7 @@ export default {
 
 <template>
   <div class="relative flex-full-prompt justify-center items-center">
-    <div class="container space-y-6 flex flex-col justify-center items-center w-10/12 p-6 pb-4 rounded-2xl bg-white">
+    <div class="main space-y-6 flex flex-col justify-center items-center w-10/12 p-6 pb-4 rounded-2xl bg-white">
       <div>
         <slot></slot>
       </div>
@@ -32,7 +32,7 @@ export default {
 </template>
 
 <style scoped>
-.container {
+.main {
   box-shadow: 0 0 24px #0002;
 }
 </style>

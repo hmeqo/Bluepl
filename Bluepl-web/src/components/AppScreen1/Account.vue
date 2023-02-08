@@ -3,7 +3,7 @@ import { ref, reactive, watch } from 'vue'
 import Description from './Description.vue'
 import Back from '../img/Back.vue'
 import YesNoPrompt from '../prompts/YesNo.vue'
-import { user } from '../js/app'
+import { user } from '../js/globals'
 
 const detailOpened = ref(false)
 
@@ -89,20 +89,20 @@ onkeydown = (event) => {
 </script>
 
 <template>
-  <div class="rounded-2xl shadow-md">
-    <div class="container flex p-3" @click="show">
+  <div class="rounded-2xl shadow-md overflow-hidden">
+    <div class="group main flex p-3 transition-colors cursor-pointer hover:bg-blue-500 bg-opacity-50" @click="show">
       <div class="shrink-0">
         <img class="w-12 h-12 mx-4 object-contain" :src="user.data.platformToImgUrl[account.platform]" alt="">
-        <div class="mt-1 text-sm text-center" :title="account.platform">{{ account.platform }}</div>
+        <div class="mt-1 text-sm text-center transition-colors group-hover:text-white" :title="account.platform">{{ account.platform }}</div>
       </div>
       <div class="space-y-1 w-full h-full ml-3">
-        <div class="text-lg" :title="account.account">{{ account.account }}</div>
-        <div class="text-neutral-600" :title="account.note">{{ account.note }}</div>
+        <div class="text-lg transition-colors group-hover:text-white" :title="account.account">{{ account.account }}</div>
+        <div class="text-neutral-600 transition-colors group-hover:text-neutral-200" :title="account.note">{{ account.note }}</div>
       </div>
     </div>
     <div v-if="detailOpened" class="absolute left-0 top-0 flex flex-col w-full h-full m-0 rounded-none bg-white">
       <div class="shrink-0 p-1 px-3">
-        <Back @click="back"></Back>
+        <Back class="cursor-pointer" @click="back"></Back>
       </div>
       <div class="flex items-center shrink-0 shadow-md p-4 border-b-2">
         <img class="w-12 h-12 mx-2 object-contain flex-shrink-0" :src="user.data.platformToImgUrl[account.platform]"
@@ -124,7 +124,7 @@ onkeydown = (event) => {
 </template>
 
 <style scoped>
-.container * {
+.main * {
   overflow: hidden;
   text-overflow: ellipsis;
 }

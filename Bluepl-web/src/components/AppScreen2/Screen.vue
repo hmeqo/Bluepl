@@ -1,6 +1,17 @@
-<script setup>
+<script>
+import { webapi } from '../js/globals'
+export default {
+    data() { return {} },
+    methods: {
+        async logout() {
+            await webapi.logout()
+        },
+    },
+}
 </script>
 
 <template>
-    <div>我的</div>
+    <div>
+        <button @click="logout">退出登录</button>
+    </div>
 </template>
