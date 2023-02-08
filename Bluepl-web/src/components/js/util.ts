@@ -27,7 +27,7 @@ export const encoder = new TextEncoder()
 // }
 
 export async function sha256hexdigest(text: string) {
-    var array = new Uint8Array(await crypto.subtle.digest('SHA-256', encoder.encode(text)))
+    var array = new Uint8Array(await window.crypto.subtle.digest('SHA-256', encoder.encode(text)))
     var result = ''
     for (var i = 0; i < array.byteLength; i++) {
         result += array[i].toString(16).padStart(2, '0')
