@@ -22,5 +22,6 @@ class App(object):
 
 if __name__ == "__main__":
     # gconfig.App.debug = True
+    gconfig.init()
     app = App()
     app.run()

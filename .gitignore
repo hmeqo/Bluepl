@@ -128,14 +128,21 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# other
+# -----------------------------------------------------------
+
+# develope
 .vscode
 *.code-workspace
 .kivy_venv
-design/.*
-data
-src/emailsender/sender.py
-src/web
-test.py
+
+# config build
+src/gconfig/config.py
+configure.py
+
+# runserver
 uwsgi.pid
 nohup.out
+
+# data
+data
+resources/app
