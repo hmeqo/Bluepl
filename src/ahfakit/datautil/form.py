@@ -15,6 +15,7 @@ print(form.parse({"username": "abc", "password": "123"}))
 ```
 """
 
+from __future__ import annotations
 import typing as _t
 
 from .validators import ValidatorsType, ValidatorType
@@ -49,7 +50,7 @@ class Field(object):
                 value = self.default
         return isinstance(value, self._type) and all(f(value) for f in self.validators)
 
-    def parse(self, value):
+    def parse(self, value, ignore_error=False):
         if value is None:
             if self.nullable:
                 return None
@@ -57,7 +58,8 @@ class Field(object):
                 value = self.default
         if isinstance(value, self._type) and all(f(value) for f in self.validators):
             return value
-        raise ValueError(value)
+        if not ignore_error:
+            raise ValueError(value)
 
     @property
     def type(self):
@@ -66,21 +68,64 @@ class Field(object):
 
 class Form(object):
 
-    def __init__(self, items: _t.Optional[_t.Dict[str, Field]] = None, **kwds: Field):
-        if items:
-            kwds.update(items)
-        self.items = kwds
+    def validate(self, items: _t.Optional[_t.Any] = None) -> bool:
+        raise NotImplementedError
 
-    def validate(self, items: dict):
-        if set(items).difference(self.items):
+    def parse(self, items: _t.Optional[_t.Any] = None, ignore_error=True) -> _t.Any:
+        raise NotImplementedError
+
+
+class DictForm(Form):
+
+    def __init__(self, fields: _t.Optional[FieldDict] = None, **kwds: ExpectField):
+        if fields:
+            kwds.update(fields)
+        self.fields = kwds
+
+    def validate(self, items: _t.Optional[dict] = None):
+        if not isinstance(items, dict):
             return False
-        return all(item.validate(items.get(k)) for k, item in self.items.items())
+        if set(items).difference(self.fields):
+            return False
+        return all(item.validate(items.get(k)) for k, item in self.fields.items())
 
-    def parse(self, items: dict):
-        result = {}
+    def parse(self, items: _t.Optional[dict] = None, ignore_error=True):
         try:
-            for name, field in self.items.items():
-                result[name] = field.parse(items.get(name))
-        except ValueError:
-            return None
-        return result
+            if not isinstance(items, dict):
+                raise ValueError
+            return {
+                name: field.parse(items.get(name), ignore_error=False)
+                for name, field in self.fields.items()
+            }
+        except ValueError as e:
+            if ignore_error:
+                return None
+            raise e
+
+
+class ListForm(Form):
+
+    def __init__(self, field: ExpectField):
+        self.field = field
+
+    def validate(self, items: _t.Optional[list] = None):
+        if not isinstance(items, list):
+            return False
+        return all(self.field.validate(i) for i in items)
+
+    def parse(self, items: _t.Optional[list] = None, ignore_error=True):
+        try:
+            if not isinstance(items, list):
+                raise ValueError
+            return [self.field.parse(i, ignore_error=False) for i in items]
+        except ValueError as e:
+            if ignore_error:
+                return None
+            raise e
+
+
+ExpectField = _t.Union[Field, DictForm, ListForm]
+
+FieldDict = _t.Dict[str, ExpectField]
+
+FieldList = _t.List[ExpectField]

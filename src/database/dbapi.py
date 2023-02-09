@@ -25,55 +25,58 @@ def get_dbapi():
 class DBApi(object):
 
     @staticmethod
-    def get_available_session(session_id: str) -> Session:
+    def get_available_session(session_id: str) -> _t.Union[Session, None]:
+        """获取一个有效的 session"""
         raise NotImplementedError
 
     @staticmethod
     def create_session(id: str, key: bytes) -> None:
+        """创建一个 session"""
         raise NotImplementedError
 
     @staticmethod
-    def get_available_registry(email: str) -> Registry:
+    def get_available_registry(email: str) -> _t.Union[Registry, None]:
+        """获取有效的 registry"""
         raise NotImplementedError
 
     @staticmethod
-    def create_registry(email: str, veri_code: str) -> None:
+    def create_registry(email: str, veri_code: str) -> _t.Union[Registry, None]:
+        """创建一个 registry"""
         raise NotImplementedError
 
     @staticmethod
     def delete_registry(email: str) -> None:
+        """删除一个 registry"""
         raise NotImplementedError
 
     @staticmethod
-    def get_user(email: str) -> User:
+    def get_user(email: str) -> _t.Union[User, None]:
+        """获取一个用户"""
         raise NotImplementedError
 
     @staticmethod
-    def add_user(user: User) -> None:
+    def create_user(email: str, password: str) -> _t.Union[User, None]:
+        """创建一个用户"""
         raise NotImplementedError
-
-    @staticmethod
-    def generate_user(email: str, password: str) -> User:
-        import random
-        import string
-        import hashlib
-
-        solt = "".join(random.choices(string.hexdigits, k=16))
-        password = hashlib.md5((password + solt).encode()).hexdigest()
-        return User(email=email, password=password, solt=solt)
 
     @staticmethod
     def get_data_accounts(user: User) -> _t.Tuple[Account, ...]:
+        """获取某个用户的 account 数据"""
         raise NotImplementedError
 
     @staticmethod
-    def add_data_account(
-        user: User,
-        platform="",
-        account="",
-        password="",
-        note="",
-    ) -> None:
+    def create_data_account(user: User, platform="", account="", password="", note="") -> Account:
+        """创建 account 数据, 返回 account_id"""
+        raise NotImplementedError
+
+    @staticmethod
+    def update_data_accounts(user: User, account_list: _t.Iterable[dict]):
+        """更新 account 数据"""
+        raise NotImplementedError
+
+    @staticmethod
+    def delete_data_accounts(user: User, account_ids: _t.Iterable[int]):
+        """删除 account 数据"""
         raise NotImplementedError
 
 
@@ -139,3 +142,14 @@ def time_not_expired(time_: int, age: int) -> bool:
     if time.time() - time_/1000 < age:
         return True
     return False
+
+
+def generate_user(email: str, password: str) -> User:
+    """生成一个用户实例"""
+    import random
+    import string
+    import hashlib
+
+    solt = "".join(random.choices(string.hexdigits, k=16))
+    password = hashlib.md5((password + solt).encode()).hexdigest()
+    return User(email=email, password=password, solt=solt)

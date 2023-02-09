@@ -1,10 +1,13 @@
 from src.platform_android.androidwebview import BrowserApp
 
-from src import gconfig
-from src.database import set_dbapi, pydbapi
+from src.database import pydb
 
-set_dbapi(pydbapi.PyDBApi)
+pydb.init()
 
 
 def main():
     BrowserApp().run()
+
+
+if __name__ == "__main__":
+    main()

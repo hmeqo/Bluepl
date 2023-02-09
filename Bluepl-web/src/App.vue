@@ -8,6 +8,7 @@ import AppScreen2 from './components/AppScreen2/Screen.vue'
 import { user } from './components/js/globals'
 import { app } from './components/js/app'
 
+user.data.accounts = []
 app.init()
 </script>
 

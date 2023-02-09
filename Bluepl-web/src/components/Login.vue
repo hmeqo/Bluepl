@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
+import { app } from './js/app';
 import { user, servers, webapi } from './js/globals'
 import { S_WAIT_VERIFY } from './js/status';
 
@@ -34,7 +35,7 @@ const formL = reactive(new FormLogin())
 <template>
   <form
     class="flex flex-col m-auto p-8 w-full h-full bg-login-900 slab:max-w-md slab:h-auto slab:rounded-md slab:shadow-neutral-800 slab:shadow-md"
-    action="/" method="post" onsubmit="return false" @submit="webapi.login">
+    action="/" method="post" onsubmit="return false" @submit="app.login">
     <div class="text-login-400 flex justify-center items-center mt-8 mb-16 text-xl slab:mb-8">登录</div>
     <div class="space-y-8 h-full flex flex-col">
       <label class="input-container">

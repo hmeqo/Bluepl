@@ -29,7 +29,7 @@ export default {
 
 <template>
   <div class="flex m-2 rounded-xl shadow-md" :class="horizontal ? '' : 'flex-col'">
-    <div class="flex justify-center items-center pt-2 px-4 text-lg">
+    <div class="flex justify-center items-center p-2 text-lg" :class="horizontal ? '' : 'pb-0'">
       <slot></slot>
     </div>
     <div class="p-2 w-full h-full">

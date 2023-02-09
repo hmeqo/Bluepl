@@ -1,4 +1,6 @@
-export const encoder = new TextEncoder()
+import CryptoJS from "crypto-js"
+
+// export const encoder = new TextEncoder()
 
 // export const decoder = new TextDecoder('UTF-8')
 
@@ -27,10 +29,11 @@ export const encoder = new TextEncoder()
 // }
 
 export async function sha256hexdigest(text: string) {
-    var array = new Uint8Array(await window.crypto.subtle.digest('SHA-256', encoder.encode(text)))
-    var result = ''
-    for (var i = 0; i < array.byteLength; i++) {
-        result += array[i].toString(16).padStart(2, '0')
-    }
-    return result
+    // var array = new Uint8Array(await window.crypto.subtle.digest('SHA-256', encoder.encode(text)))
+    // var result = ''
+    // for (var i = 0; i < array.byteLength; i++) {
+    //     result += array[i].toString(16).padStart(2, '0')
+    // }
+    // return result
+    return CryptoJS.SHA256(CryptoJS.enc.Utf8.parse(text)).toString(CryptoJS.enc.Hex)
 }

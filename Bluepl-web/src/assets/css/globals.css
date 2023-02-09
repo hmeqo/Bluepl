@@ -1,5 +1,7 @@
 * {
     box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -12,8 +14,8 @@ input,
 button,
 select,
 textarea {
-    outline: 0;
     border: 0;
+    outline: none;
 }
 
 .flex-full-prompt {

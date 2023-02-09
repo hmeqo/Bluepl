@@ -1,101 +1,18 @@
 import hashlib
-import json
 import random
 import string
-import traceback
 import typing as _t
 
-from flask import Flask, render_template, send_file, send_from_directory, request, Response
+from flask import render_template, send_file, send_from_directory, request
 
 from ..ahfakit.simplecrypto.dh import DH
-from ..ahfakit.datautil.form import Form, Field
+from ..ahfakit.datautil.form import DictForm, Field, ListForm
 from .. import gconfig
-from ..database import get_dbapi
 from ..emailsender.smtp import send_verification_code
 from .status import *
-from .currequest import set_current_session, get_current_session
-
-app = Flask(
-    __name__,
-    template_folder=str(gconfig.Dirs.webroot),
-    root_path=str(gconfig.Dirs.root),
-)
-app.config["JSON_AS_ASCII"] = False
-
-
-def require_json_dict(form: _t.Optional[Form] = None):
-    """装饰器, 获取并验证dict, 返回无误的dict或错误response"""
-    def get_func(func: _t.Callable[[dict], dict]):
-        def wrapper(data: _t.Optional[dict] = None) -> dict:
-            data = request.get_json() if data is None else data
-            if not data or not isinstance(data, dict):
-                return S_PARAM_ERROR
-            if form:
-                data = form.parse(data)
-                if data is None:
-                    return S_PARAM_ERROR
-            return func(data)
-        wrapper.__name__ = func.__name__
-        return wrapper
-    return get_func
-
-
-def require_aes_parser(nodata=False):
-    """装饰器, 解析aes会话获取数据, 返回值为 Response"""
-    def get_func(func: _t.Callable[..., _t.Union[dict, Response]]):
-        def wrapper() -> Response:
-            veri_result = veri_session()
-            session = get_current_session()
-            success, data = veri_result["success"], veri_result["data"]
-            if not success:
-                return app.make_response(session.encrypt(data))
-            response = func() if nodata else func(data)
-            if not isinstance(response, Response):
-                response = app.make_response(response)
-            response.data = session.encrypt(response.data)
-            return response
-        wrapper.__name__ = func.__name__
-        return wrapper
-    return get_func
-
-
-def require_ensure_response(func: _t.Callable[..., _t.Union[Response, dict]]):
-    """确保返回值为 Response"""
-    def wrapper(*args, **kwargs) -> Response:
-        response = func(*args, **kwargs)
-        if isinstance(response, Response):
-            return response
-        return app.make_response(response)
-    wrapper.__name__ = func.__name__
-    return wrapper
-
-
-@require_json_dict(Form({
-    "sessionId": Field(str),
-    "digest": Field(str),
-    "data": Field(str)
-}))
-def veri_session(json_data: _t.Dict[str, _t.Any]):
-    """验证session"""
-    # 获取session并判断session是否正常
-    session_id = json_data["sessionId"]
-    digest = json_data["digest"]
-    session = get_dbapi().get_available_session(session_id)
-    if not session:
-        return {"success": False, "data": {**S_SESSION_ERROR, "expired": True}}
-    set_current_session(session)
-    # 验证摘要
-    data: bytes = json_data["data"].encode()
-    if digest != hashlib.sha256(session.key + data).hexdigest():
-        return {"success": False, "data": S_SESSION_ERROR}
-    try:
-        decrypted = session.decrypt(data)
-        result = json.loads(decrypted)
-    except Exception:
-        traceback.print_exc()
-        return {"success": False, "data": S_SESSION_ERROR}
-    else:
-        return {"success": True, "data": result}
+from . import requirer
+from .app import app
+from .requirer import get_dbapi
 
 
 @app.route("/favicon.ico")
@@ -110,6 +27,8 @@ def app_anyurl(name: str):
     # 如果是 js 文件, 则更改 Content-Type
     if "." in name and name.rsplit(".", 1)[-1] in ("js", "ts"):
         response.headers["Content-Type"] = "text/javascript;charset=utf-8"
+    if response.status_code != 404:
+        response.status_code = 200
     return response
 
 
@@ -119,18 +38,16 @@ def app_index():
 
 
 @app.route("/session/info", methods=["POST"])
-@require_ensure_response
-@require_json_dict(Form({"id": Field(str)}))
+@requirer.require_ensure_response
+@requirer.require_json_data(DictForm({"id": Field(str)}))
 def app_session_info(data: dict):
     session = get_dbapi().get_available_session(data["id"])
-    if session:
-        return {**S_SUCCESS_200, "logined": bool(session.user_email), "available": True}
-    return {**S_SUCCESS_200, "logined": False, "available": False}
+    return {**S_SUCCESS_200} if session else {**S_SESSION_ERROR}
 
 
 @app.route("/session/create", methods=["POST"])
-@require_ensure_response
-@require_json_dict(Form({
+@requirer.require_ensure_response
+@requirer.require_json_data(DictForm({
     "p": Field((str, int)),
     "g": Field((str, int)),
     "key": Field((str, int)),
@@ -151,8 +68,8 @@ def app_session_create(data: dict):
 
 
 @app.route("/login", methods=["POST"])
-@require_aes_parser()
-@require_json_dict(Form({
+@requirer.require_aes_parser
+@requirer.require_json_data(DictForm({
     "email": Field(str),
     "password": Field(str),
     "veriCode": Field(str, ""),
@@ -167,7 +84,7 @@ def app_login(json_data: dict):
     user = dbapi.get_user(email)
     if user:
         if user.password == hashlib.md5((password + user.solt).encode()).hexdigest():
-            get_current_session().user_email = email
+            requirer.get_session().user_email = email
             return S_SUCCESS_200
         return S_PASSWORD_ERROR
     # 注册
@@ -182,13 +99,13 @@ def app_login(json_data: dict):
             return S_WAIT_VERIFY
         if veri_code.upper() == registry.veri_code:
             # 验证成功后注册
-            dbapi.add_user(dbapi.generate_user(registry.email, password))
+            dbapi.create_user(registry.email, password)
             dbapi.delete_registry(registry.email)
             return S_SUCCESS_200
         return S_WAIT_VERIFY
     # 本地端直接注册无需验证
     if request.host.split(":")[0] == "127.0.0.1":
-        dbapi.add_user(dbapi.generate_user(email, password))
+        dbapi.create_user(email, password)
         return S_SUCCESS_200
     # 生成验证码, 发送邮件
     veri_code = "".join(random.choices(string.hexdigits, k=5)).upper()
@@ -200,21 +117,17 @@ def app_login(json_data: dict):
 
 
 @app.route("/logout", methods=["POST"])
-@require_aes_parser(nodata=True)
-def app_logout():
-    session = get_current_session()
+@requirer.require_login
+def app_logout(*_):
+    session = requirer.get_session()
     session.user_email = ""
     return S_SUCCESS_200
 
 
 @app.route("/user/accounts", methods=["POST"])
-@require_aes_parser(nodata=True)
-def app_user_data_accounts():
+@requirer.require_login
+def app_user_data_accounts(*_):
     dbapi = get_dbapi()
-    session = get_current_session()
-    email = session.user_email
-    if not email:
-        return S_NOT_LOGIN
     accounts = [
         {
             "id": account.id,
@@ -223,6 +136,49 @@ def app_user_data_accounts():
             "password": account.password,
             "note": account.note,
         }
-        for account in dbapi.get_data_accounts(dbapi.get_user(email))
+        for account in dbapi.get_data_accounts(requirer.get_user())
     ]
     return {**S_SUCCESS_200, "data": accounts}
+
+
+@app.route("/user/accounts/create", methods=["POST"])
+@requirer.require_login
+@requirer.require_json_data(DictForm({
+    "platform": Field(str, ""),
+    "account": Field(str, ""),
+    "password": Field(str, ""),
+    "note": Field(str, ""),
+}))
+def app_user_data_create_account(json_data: dict):
+    dbapi = get_dbapi()
+    user = requirer.get_user()
+    return {**S_SUCCESS_200, "id": dbapi.create_data_account(
+        user, json_data["platform"], json_data["account"],
+        json_data["password"], json_data["note"],
+    ).id}
+
+
+@app.route("/user/accounts/update", methods=["POST"])
+@requirer.require_login
+@requirer.require_json_data(ListForm(
+    DictForm({
+        "id": Field(int),
+        "platform": Field(str, ""),
+        "account": Field(str, ""),
+        "password": Field(str, ""),
+        "note": Field(str, ""),
+    })
+))
+def app_user_data_update_accounts(json_data: _t.List[dict]):
+    dbapi = get_dbapi()
+    dbapi.update_data_accounts(requirer.get_user(), json_data)
+    return S_SUCCESS_200
+
+
+@app.route("/user/accounts/delete", methods=["POST"])
+@requirer.require_login
+@requirer.require_json_data(ListForm(Field(int)))
+def app_user_data_delete_account(json_data: _t.List[int]):
+    dbapi = get_dbapi()
+    dbapi.delete_data_accounts(requirer.get_user(), json_data)
+    return S_SUCCESS_200

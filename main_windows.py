@@ -2,9 +2,9 @@ import webview
 
 from src import gconfig, server
 from src.event import EventType, emit
-from src.database import set_dbapi, pydbapi
+from src.database import pydb
 
-set_dbapi(pydbapi.PyDBApi)
+pydb.init()
 
 
 class App(object):
@@ -20,6 +20,7 @@ class App(object):
         emit(EventType.START)
 
 
-def main():
+if __name__ == "__main__":
+    # gconfig.App.debug = True
     app = App()
     app.run()
