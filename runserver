@@ -1,2 +1,0 @@
-source ./.venv/bin/activate
-nohup uwsgi --ini uwsgi.ini &
