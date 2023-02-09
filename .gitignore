@@ -134,7 +134,8 @@ dmypy.json
 .kivy_venv
 design/.*
 data
-src/sender/sender.py
+src/emailsender/sender.py
 src/web
 test.py
 uwsgi.pid
+nohup.out
