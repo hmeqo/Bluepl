@@ -90,7 +90,7 @@ class Session(Record):
 
     def __init__(self, properties: _t.Optional[_t.Dict[str, _t.Any]] = None, **kwds):
         super().__init__(properties, **kwds)
-        self.aes = AES(self.key, AES.modes.ECB())
+        self.aes = AES(self.key, AES.modes.CBC(b"0102030405060708"))
 
     def is_available(self):
         return time_not_expired(self.time, self.age)

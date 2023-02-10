@@ -29,22 +29,22 @@ export const servers = reactive([
 ])
 
 export const aes = reactive({
-    iv: CryptoJS.enc.Utf8.parse('010203040506070'),
+    iv: CryptoJS.enc.Utf8.parse('0102030405060708'),
 
     encrypt(text: string): string {
         return CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(text), CryptoJS.enc.Utf8.parse(session.key), {
-            // iv: this.iv,
-            // mode: CryptoJS.mode.CBC,
-            mode: CryptoJS.mode.ECB,
+            iv: this.iv,
+            mode: CryptoJS.mode.CBC,
+            // mode: CryptoJS.mode.ECB,
             padding: CryptoJS.pad.Pkcs7,
         }).toString()
     },
 
     decrypt(encrypted: string): string {
         return CryptoJS.AES.decrypt(encrypted, CryptoJS.enc.Utf8.parse(session.key), {
-            // iv: this.iv,
-            // mode: CryptoJS.mode.CBC,
-            mode: CryptoJS.mode.ECB,
+            iv: this.iv,
+            mode: CryptoJS.mode.CBC,
+            // mode: CryptoJS.mode.ECB,
             padding: CryptoJS.pad.Pkcs7,
         }).toString(CryptoJS.enc.Utf8)
     },

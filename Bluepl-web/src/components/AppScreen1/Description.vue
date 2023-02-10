@@ -1,30 +1,42 @@
-<script lang="ts">
-export default {
-  emits: ['update:model-value'],
-  props: {
-    title: String,
-    modelValue: String,
-    horizontal: Boolean,
-    multiline: Boolean,
-  },
-  data() { return {} },
-  mounted() {
-    this.$refs.textarea.style.height = this.$refs.textarea.scrollHeight + 'px'
-    this.$refs.textarea.oninput = () => {
-      this.$refs.textarea.style.height = this.$refs.textarea.scrollHeight + 'px'
+<script lang="ts" setup>
+import { ref, watch, computed } from 'vue';
+import {app} from '../js/app';
+
+const emit = defineEmits(['update:model-value'])
+
+const props = defineProps<{
+  modelValue: string,
+  horizontal?: boolean,
+}>()
+
+const textareaElem = ref(null)
+
+watch(textareaElem, () => {
+  if (!textareaElem.value) { return }
+  setTimeout(() => {
+    var elem: any = textareaElem.value
+    elem.style.height = elem.scrollHeight + 'px'
+    elem.oninput = () => {
+      elem.style.height = elem.scrollHeight + 'px'
     }
+  }, 100)
+})
+
+watch(app, () => {
+  if (app.currentAccountId == -1) {
+    var elem: any = textareaElem.value
+    elem.style.height = '2.5rem'
+  }
+})
+
+const value = computed({
+  get() {
+    return props.modelValue
   },
-  computed: {
-    value: {
-      get() {
-        return this.modelValue
-      },
-      set(newValue: string) {
-        this.$emit('update:model-value', newValue)
-      },
-    },
+  set(newValue: string) {
+    emit('update:model-value', newValue)
   },
-}
+})
 </script>
 
 <template>
@@ -34,7 +46,7 @@ export default {
     </div>
     <div class="p-2 w-full h-full">
       <textarea class="flex w-full h-10 p-2 shadow-inner rounded-2xl whitespace-normal overflow-visible resize-none"
-        ref="textarea" v-model="value"></textarea>
+        ref="textareaElem" v-model="value"></textarea>
     </div>
   </div>
 </template>

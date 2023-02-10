@@ -14,12 +14,12 @@ var props = defineProps({
 
 function confirm() {
   emit('confirm')
-  emit('close')
+  close()
 }
 
 function cancel() {
   emit('cancel')
-  emit('close')
+  close()
 }
 
 function close() {

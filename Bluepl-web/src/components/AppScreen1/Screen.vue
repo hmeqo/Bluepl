@@ -11,7 +11,7 @@ const searchFocused = ref(false)
 </script>
 
 <template>
-  <div class="relative flex flex-col w-full h-full overflow-hidden">
+  <div class="flex flex-col w-full h-full overflow-hidden">
     <div class="space-x-4 flex p-4">
       <div class="shrink-0 flex h-full rounded-full shadow-md transition-all"
         :class="searchFocused ? 'w-full' : 'show-btn'">

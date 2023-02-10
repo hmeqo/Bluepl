@@ -13,7 +13,8 @@ export function getAccountById(accountId: number) {
 }
 
 export function getPlatformUrl(platform: string | null) {
-    return user.data.platformToImgUrl[platform?.toLowerCase() || '']
+    var url = user.data.platformToImgUrl[platform?.toLowerCase() || '']
+    return url || user.data.platformToImgUrl['']
 }
 
 export const app = reactive({
