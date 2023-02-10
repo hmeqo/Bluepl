@@ -44,7 +44,7 @@ watch(app, () => {
 
 watch(accountRecord, () => {
   for (const name in accountRecord) {
-    if (accountRecord[name] != currentAccount[name]) {
+    if (accountRecord[name] != currentAccount.value[name]) {
       hasChange.value = true
       return
     }
