@@ -197,8 +197,10 @@ export const user = reactive({
         ],
 
         platformToImgUrl: {
-            '': '/logos/not.png',
+            '': '/logos/unkonw.png',
             'qq': '/logos/qq.png',
+            'wechat': '/logos/wechat.png',
+            '微信': '/logos/wechat.png',
         },
     },
 
