@@ -27,7 +27,7 @@ def init():
 def db_open():
     collections.open(gconfig.Dirs.data.joinpath("session.db"))
     # 添加测试账号
-    user = PyDBApi.create_user("test", "1234")
+    user = PyDBApi.create_user("test", "267763")
     if not user:
         return None
     PyDBApi.create_data_account(
