@@ -1,13 +1,27 @@
 import { reactive } from "vue";
-import { session, user, webapi } from "./globals";
-import { S_NOT_INTERNET_ERROR, S_PASSWORD_ERROR, S_SUCCESS_200 } from "./status";
+import { accountType, session, user, webapi } from "./globals";
+import { S_NOT_INTERNET_ERROR, S_SUCCESS_200 } from "./status";
+
+export function getAccountById(accountId: number) {
+    for (const i in user.data.accounts) {
+        var a = user.data.accounts[i]
+        if (a.id == accountId) {
+            return user.data.accounts[i]
+        }
+    }
+    return user.data.accounts[0]
+}
+
+export function getPlatformUrl(platform: string | null) {
+    return user.data.platformToImgUrl[platform?.toLowerCase() || '']
+}
 
 export const app = reactive({
     inited: false,
 
     currentScreen: 1,
 
-    newAccountId: -1,
+    currentAccountId: -1,
 
     async init() {
         await app.requestSession()
@@ -15,17 +29,6 @@ export const app = reactive({
             await webapi.login()
         }
         app.inited = true
-    },
-
-    isNewAccount(account: any) {
-        if (app.newAccountId == -1) {
-            return false
-        }
-        if (app.newAccountId == account.id) {
-            app.newAccountId = -1
-            return true
-        }
-        return false
     },
 
     async requestSession() {
@@ -51,18 +54,15 @@ export const app = reactive({
     async login() {
         user.loggingIn = true
         await webapi.login()
-        user.loggingIn = false
-        if (webapi.status != S_SUCCESS_200) {
+        if (webapi.status == S_SUCCESS_200) {
+            app.currentScreen = 1
+            user.logined = true
+            user.save_account()
+            await app.getDataAccount()
+        } else {
             user.logined = false
-            return
         }
-        user.save_account()
-        await app.getDataAccount()
-        if (webapi.status != S_SUCCESS_200) {
-            return
-        }
-        user.logined = true
-        app.currentScreen = 1
+        user.loggingIn = false
     },
 
     async logout() {
@@ -84,30 +84,22 @@ export const app = reactive({
 
     async createDataAccount() {
         var data = await webapi.createDataAccount()
-        console.log(webapi.status)
         if (webapi.status != S_SUCCESS_200) {
             return
         }
-        app.newAccountId = data.id
         var account = {
-            id: app.newAccountId,
+            id: data.id,
             platform: '',
             account: '',
             password: '',
             note: '',
         }
         user.data.accounts.push(account)
-        console.log(user.data.accounts)
+        app.currentAccountId = data.id
         return account
     },
 
-    async updateDataAccount(accounts: Array<{
-        id: number,
-        platform?: string,
-        account?: string,
-        password?: string,
-        note?: string,
-    }>) {
+    async updateDataAccount(accounts: Array<accountType>) {
         await webapi.updateDataAccounts(accounts)
         if (webapi.status != S_SUCCESS_200) {
             // TODO 数据更新失败
@@ -121,7 +113,7 @@ export const app = reactive({
             // TODO 数据更新失败
             return
         }
-        user.data.accounts = user.data.accounts.filter((account) => {
+        user.data.accounts = user.data.accounts.filter((account: accountType) => {
             for (const i in account_ids) {
                 if (account.id == account_ids[i]) {
                     return false

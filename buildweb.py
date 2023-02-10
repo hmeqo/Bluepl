@@ -7,6 +7,8 @@ dist_dir = Path("Bluepl-web")
 webroot = gconfig.Dirs.webroot
 
 os.chdir(dist_dir)
+if not Path("node_modules").exists():
+    os.system("npm install")
 os.system("npm run build")
 os.chdir("..")
 

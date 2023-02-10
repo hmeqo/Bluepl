@@ -1,5 +1,5 @@
 <script setup>
-var emit = defineEmits(['close', 'confirm'])
+var emit = defineEmits(['close', 'cancel', 'confirm'])
 
 var props = defineProps({
   yes: {
@@ -13,22 +13,23 @@ var props = defineProps({
 })
 
 function confirm() {
-  emit('confirm', true)
-  emit('close', true)
+  emit('confirm')
+  emit('close')
 }
 
 function cancel() {
-  emit('close', true)
+  emit('cancel')
+  emit('close')
 }
 
 function close() {
-  emit('close', false)
+  emit('close')
 }
 </script>
 
 <template>
   <div class="relative flex-full-prompt justify-center items-center bg-neutral-500 bg-opacity-5">
-    <div class="shadow-2xl space-y-6 flex flex-col justify-center items-center w-10/12 p-6 pb-4 rounded-2xl bg-white">
+    <div class="shadow-2xl space-y-6 flex flex-col justify-center items-center w-10/12 p-8 pb-6 rounded-2xl bg-white">
       <div>
         <slot></slot>
       </div>

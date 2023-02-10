@@ -5,6 +5,14 @@ import CryptoJS from 'crypto-js'
 import { sha256hexdigest } from './util'
 import { S_NOT_INTERNET_ERROR } from './status'
 
+export type accountType = {
+    id: number,
+    platform: string,
+    account: string,
+    password: string,
+    note: string,
+}
+
 export const servers = reactive([
     {
         name: '本地',
@@ -53,7 +61,6 @@ export const webapi = reactive({
                 return data
             })
             .catch(error => {
-                console.log(error)
                 webapi.status = S_NOT_INTERNET_ERROR
                 return null
             })
@@ -71,7 +78,6 @@ export const webapi = reactive({
             webapi.status = data.status
             return data
         }).catch(error => {
-            console.log(error)
             webapi.status = S_NOT_INTERNET_ERROR
             return null
         })
@@ -126,19 +132,13 @@ export const webapi = reactive({
         return await webapi.postUserData('/user/accounts/create', {})
     },
 
-    async updateDataAccounts(accounts: Array<{
-        id: number,
-        platform?: string,
-        account?: string,
-        password?: string,
-        note?: string,
-    }>) {
+    async updateDataAccounts(accounts: Array<accountType>) {
         return await webapi.postUserData('/user/accounts/update', accounts)
     },
 
     async deleteDataAccounts(account_ids: Array<number>) {
         return await webapi.postUserData('/user/accounts/delete', account_ids)
-    }
+    },
 })
 
 export const session = reactive({
@@ -165,6 +165,8 @@ export const user = reactive({
     password: localStorage.getItem('sessionPassword') || '',
     veriCode: '',
 
+    name: '',
+
     loggingIn: false,
     // 是否登录成功
     logined: false,
@@ -178,11 +180,25 @@ export const user = reactive({
                 password: '',
                 note: '',
             },
+            {
+                id: 1,
+                platform: '',
+                account: '',
+                password: '',
+                note: '',
+            },
+            {
+                id: 1,
+                platform: '',
+                account: '',
+                password: '',
+                note: '',
+            },
         ],
 
         platformToImgUrl: {
             '': '/logos/not.png',
-            'QQ': '/logos/qq.png',
+            'qq': '/logos/qq.png',
         },
     },
 

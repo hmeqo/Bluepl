@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
 import Login from './components/Login.vue'
 import Loading from './components/Loading.vue'
 import NotInternetPrompt from './components/prompts/NotInternet.vue'

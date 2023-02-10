@@ -25,12 +25,6 @@ python configure.py
 
 ### Build web
 
-Cd to Bluepl-web, and run npm install
-
-```bash
-npm install
-```
-
 Run this python file to build: `buildweb.py` (on root path)
 
 ```bash
