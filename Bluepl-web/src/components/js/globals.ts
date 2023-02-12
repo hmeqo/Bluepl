@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { reactive, UnwrapNestedRefs } from 'vue'
 import axios from 'axios'
 import worker from './worker'
 import CryptoJS from 'crypto-js'
@@ -50,8 +50,12 @@ export const aes = reactive({
     },
 })
 
+export const webapiOnRequest: UnwrapNestedRefs<Array<Function>> = reactive([])
+
 export const webapi = reactive({
     status: 0,
+
+    onRequest: webapiOnRequest,
 
     async postData(url: string, data?: Object) {
         return await axios.post(url, data)
@@ -60,8 +64,10 @@ export const webapi = reactive({
                 webapi.status = data.status
                 return data
             })
-            .catch(error => {
+            .catch(() => {
                 webapi.status = S_NOT_INTERNET_ERROR
+                for (const i in webapi.onRequest)
+                    webapi.onRequest[i]()
                 return null
             })
     },
@@ -77,8 +83,10 @@ export const webapi = reactive({
             var data = JSON.parse(aes.decrypt(response.data))
             webapi.status = data.status
             return data
-        }).catch(error => {
+        }).catch(() => {
             webapi.status = S_NOT_INTERNET_ERROR
+            for (const i in webapi.onRequest)
+                webapi.onRequest[i]()
             return null
         })
     },
@@ -158,6 +166,8 @@ export const session = reactive({
     },
 })
 
+export const userAccounts: UnwrapNestedRefs<Array<accountType>> = reactive([])
+
 export const user = reactive({
     // 登录信息
     server: localStorage.getItem('sessionServer') || servers[0].strAddr,
@@ -172,30 +182,7 @@ export const user = reactive({
     logined: false,
 
     data: {
-        accounts: [
-            {
-                id: 1,
-                platform: '',
-                account: '',
-                password: '',
-                note: '',
-            },
-            {
-                id: 1,
-                platform: '',
-                account: '',
-                password: '',
-                note: '',
-            },
-            {
-                id: 1,
-                platform: '',
-                account: '',
-                password: '',
-                note: '',
-            },
-        ],
-
+        accounts: userAccounts,
         platformToImgUrl: {
             '': '/logos/unknow.png',
             'qq': '/logos/qq.png',
@@ -208,6 +195,7 @@ export const user = reactive({
         localStorage.setItem('sessionServer', user.server)
         localStorage.setItem('sessionEmail', user.email)
         localStorage.setItem('sessionPassword', user.password)
+        user.password = ''
     },
 
     clear_account() {

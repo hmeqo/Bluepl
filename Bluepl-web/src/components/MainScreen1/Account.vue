@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { app, getAccountById, getPlatformUrl } from '../js/app';
-import { user } from '../js/globals'
 
 const props = defineProps<{
   accountId: number,
@@ -14,7 +13,7 @@ function showDetail() {
 </script>
 
 <template>
-  <div class="rounded-2xl shadow-md overflow-hidden">
+  <div class="rounded-2xl shadow-md overflow-hidden bg-white">
     <div class="group main flex p-3 transition-colors cursor-pointer hover:bg-blue-500 bg-opacity-50"
       @click="showDetail">
       <div class="shrink-0">

@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { webapi } from '../js/globals';
 import { S_NOT_INTERNET_ERROR } from '../js/status';
 
-watch(webapi, () => {
+webapi.onRequest.push(() => {
   if (webapi.status == S_NOT_INTERNET_ERROR) {
     opened.value = true
   }

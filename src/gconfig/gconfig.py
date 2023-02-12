@@ -5,7 +5,7 @@ from pathlib import Path as _Path
 import sys as _sys
 
 from ..ahfakit.datautil import datamb as _datamb
-from .config import Smtp  # type: ignore
+from .config import Smtp, Socket  # type: ignore
 
 
 class Dirs(object):
@@ -26,8 +26,9 @@ class Files(object):
 class App(object):
     """应用信息"""
 
-    name = "Bluepl"
+    name = "Accuruna"
     debug = False
+    port = 27640
 
 
 config = _datamb.ArgMapTree({})

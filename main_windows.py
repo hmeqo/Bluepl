@@ -11,7 +11,7 @@ class App(object):
 
     def __init__(self):
         self.window = webview.create_window(gconfig.App.name, server.app)
-        self.window._http_port = 27640
+        self.window._http_port = gconfig.App.port
 
     def run(self):
         webview.start(self.on_start, gui="gtk", debug=gconfig.App.debug)

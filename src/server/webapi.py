@@ -116,6 +116,11 @@ def app_login(json_data: dict):
     return S_WAIT_VERIFY
 
 
+@app.route("/verification/<path:code>")
+def app_verification(code):
+    pass
+
+
 @app.route("/logout", methods=["POST"])
 @requirer.require_login
 def app_logout(*_):

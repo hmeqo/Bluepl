@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+* {
+    @apply box-border select-none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    @apply fixed w-full h-full bg-primary-900 whitespace-nowrap overflow-hidden;
+}
+
+#app {
+    @apply grid w-full h-full;
+}
+
+input,
+button,
+select,
+textarea {
+    @apply border-0 outline-none;
+}
+
+.flex-full-prompt {
+    @apply z-50 absolute left-0 top-0 flex w-full h-full;
+}

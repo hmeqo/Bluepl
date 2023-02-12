@@ -13,14 +13,12 @@ export function getAccountById(accountId: number) {
 }
 
 export function getPlatformUrl(platform: string | null) {
-    var url = user.data.platformToImgUrl[platform?.toLowerCase() || '']
+    var url = user.data.platformToImgUrl[platform?.toLowerCase().trim() || '']
     return url || user.data.platformToImgUrl['']
 }
 
 export const app = reactive({
     inited: false,
-
-    currentScreen: 1,
 
     currentAccountId: -1,
 
@@ -56,7 +54,6 @@ export const app = reactive({
         user.loggingIn = true
         await webapi.login()
         if (webapi.status == S_SUCCESS_200) {
-            app.currentScreen = 1
             user.logined = true
             user.save_account()
             await app.getDataAccount()
@@ -74,10 +71,10 @@ export const app = reactive({
 
     async getDataAccount() {
         var data = (await webapi.getDataAccounts()).data
-        user.data.accounts = []
         if (webapi.status != S_SUCCESS_200) {
             return
         }
+        user.data.accounts = []
         for (const i in data) {
             user.data.accounts.push(data[i])
         }

@@ -11,8 +11,9 @@ const props = defineProps<{
 
 const textareaElem = ref(null)
 
+// 自动调整 textarea 的大小
+
 watch(textareaElem, () => {
-  if (!textareaElem.value) { return }
   setTimeout(() => {
     var elem: any = textareaElem.value
     elem.style.height = elem.scrollHeight + 'px'

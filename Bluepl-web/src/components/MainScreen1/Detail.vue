@@ -11,9 +11,9 @@ import { S_SUCCESS_200 } from '../js/status'
 
 const hasChange = ref(false)
 
-const yesNoPromptOpened = ref(false)
+const yesNoPromptStatus = reactive({ opened: false })
 
-const deletePromptOpened = ref(false)
+const deletePromptStatus = reactive({ opened: false })
 
 const currentAccount: Ref<accountType> = ref({
   id: -1,
@@ -52,9 +52,17 @@ watch(accountRecord, () => {
   hasChange.value = false
 })
 
+function isEmpty() {
+  return !accountRecord.platform && !accountRecord.account && !accountRecord.password && !accountRecord.note
+}
+
 function back() {
+  if (isEmpty()) {
+    deleteAccount()
+    return
+  }
   if (hasChange.value) {
-    yesNoPromptOpened.value = true
+    yesNoPromptStatus.opened = true
   } else {
     close()
   }
@@ -73,10 +81,6 @@ async function save() {
   close()
 }
 
-function closeYesNoPrompt() {
-  yesNoPromptOpened.value = false
-}
-
 function close() {
   app.currentAccountId = -1
 }
@@ -87,7 +91,15 @@ async function deleteAccount() {
 }
 
 async function closeDeletePrompt() {
-  deletePromptOpened.value = false
+  deletePromptStatus.opened = false
+}
+
+async function checkDeleteAccount() {
+  if (isEmpty()) {
+    deleteAccount()
+    return
+  }
+  deletePromptStatus.opened = true
 }
 </script>
 
@@ -101,7 +113,7 @@ async function closeDeletePrompt() {
         <Save v-if="hasChange" class="mx-8" @click="save"></Save>
       </div>
       <div class="flex justify-center items-center">
-        <Delete class="w-8 h-8" @click="() => deletePromptOpened = true"></Delete>
+        <Delete class="w-8 h-8" @click="checkDeleteAccount"></Delete>
       </div>
     </div>
     <div class="flex items-center shrink-0 shadow-md p-4 border-b-2">
@@ -113,13 +125,13 @@ async function closeDeletePrompt() {
     <div class="space-y-4 p-4 h-full overflow-auto">
       <Description v-model="accountRecord.account">账号</Description>
       <Description v-model="accountRecord.password">密码</Description>
-      <Description v-model="accountRecord.note" :multiline="true">描述</Description>
+      <Description v-model="accountRecord.note" :multiline="true">备注</Description>
     </div>
-    <YesNoPrompt v-if="yesNoPromptOpened" :yes="'保存'" :no="'不保存'" @confirm="save" @cancel="close"
-      @close="closeYesNoPrompt">
+    <YesNoPrompt :status="yesNoPromptStatus" :yes="'保存'" :no="'不保存'" @confirm="save" @cancel="close">
       是否保存修改
     </YesNoPrompt>
-    <YesNoPrompt v-if="deletePromptOpened" :yes="'删除'" @confirm="deleteAccount" @close="closeDeletePrompt">
+    <YesNoPrompt :status="deletePromptStatus" :yes="'删除'" @confirm="deleteAccount"
+      @close="closeDeletePrompt">
       确认删除
     </YesNoPrompt>
   </div>
