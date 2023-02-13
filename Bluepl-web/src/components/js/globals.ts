@@ -50,15 +50,20 @@ export const aes = reactive({
     },
 })
 
+export const webapiOnRequestStart: UnwrapNestedRefs<Array<Function>> = reactive([])
+
 export const webapiOnRequest: UnwrapNestedRefs<Array<Function>> = reactive([])
 
 export const webapi = reactive({
     status: 0,
 
-    onRequest: webapiOnRequest,
+    onRequestStart: webapiOnRequestStart,
+    onRequestEnd: webapiOnRequest,
 
     async postData(url: string, data?: Object) {
-        return await axios.post(url, data)
+        for (const i in webapi.onRequestStart)
+            webapi.onRequestStart[i]()
+        var result = await axios.post(url, data)
             .then(response => {
                 var data = response.data
                 webapi.status = data.status
@@ -66,16 +71,19 @@ export const webapi = reactive({
             })
             .catch(() => {
                 webapi.status = S_NOT_INTERNET_ERROR
-                for (const i in webapi.onRequest)
-                    webapi.onRequest[i]()
                 return null
             })
+        for (const i in webapi.onRequestEnd)
+            webapi.onRequestEnd[i]()
+        return result
     },
 
     async postUserData(url: string, data?: Object) {
+        for (const i in webapi.onRequestStart)
+            webapi.onRequestStart[i]()
         var b = aes.encrypt(JSON.stringify(data))
         var digest = await sha256hexdigest(session.key + b)
-        return await axios.post(url, {
+        var result = await axios.post(url, {
             sessionId: session.id,
             digest: digest,
             data: b,
@@ -85,10 +93,11 @@ export const webapi = reactive({
             return data
         }).catch(() => {
             webapi.status = S_NOT_INTERNET_ERROR
-            for (const i in webapi.onRequest)
-                webapi.onRequest[i]()
             return null
         })
+        for (const i in webapi.onRequestEnd)
+            webapi.onRequestEnd[i]()
+        return result
     },
 
     async getSessionInfo() {
@@ -130,6 +139,10 @@ export const webapi = reactive({
 
     async logout() {
         return await webapi.postUserData('/logout', {})
+    },
+
+    async getUserInfo() {
+        return await webapi.postUserData('/user/info', {})
     },
 
     async getDataAccounts() {
@@ -175,7 +188,9 @@ export const user = reactive({
     password: localStorage.getItem('sessionPassword') || '',
     veriCode: '',
 
+    uid: 0,
     name: '',
+    avatar: '',
 
     loggingIn: false,
     // 是否登录成功

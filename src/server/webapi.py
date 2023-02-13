@@ -1,6 +1,7 @@
 import hashlib
 import random
 import string
+import re
 import typing as _t
 
 from flask import render_template, send_file, send_from_directory, request
@@ -13,6 +14,9 @@ from .status import *
 from . import requirer
 from .app import app
 from .requirer import get_dbapi
+
+pattern_email = re.compile(r"^\d+@\w+\.\w+|test$")
+pattern_password = re.compile(r"^[\w `~!@#$%^&*()_+-=\[\]{}|\\;:'\",<.>/?]*$")
 
 
 @app.route("/favicon.ico")
@@ -70,8 +74,8 @@ def app_session_create(data: dict):
 @app.route("/login", methods=["POST"])
 @requirer.require_aes_parser
 @requirer.require_json_data(DictForm({
-    "email": Field(str),
-    "password": Field(str),
+    "email": Field(str, validator=lambda x: bool(pattern_email.match(x))),
+    "password": Field(str, validator=lambda x: bool(pattern_password.match(x))),
     "veriCode": Field(str, ""),
 }))
 def app_login(json_data: dict):
@@ -118,6 +122,7 @@ def app_login(json_data: dict):
 
 @app.route("/verification/<path:code>")
 def app_verification(code):
+    # TODO
     pass
 
 
@@ -127,6 +132,18 @@ def app_logout(*_):
     session = requirer.get_session()
     session.user_email = ""
     return S_SUCCESS_200
+
+
+@app.route("/user/info", methods=["POST"])
+@requirer.require_login
+def app_user_info(*_):
+    user = requirer.get_user()
+    return {**S_SUCCESS_200, "data": {
+        "uid": user.uid,
+        "email": user.email,
+        "name": user.name,
+        "avatar": user.avatar,
+    }}
 
 
 @app.route("/user/accounts", methods=["POST"])

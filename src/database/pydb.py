@@ -28,13 +28,13 @@ def db_open():
     collections.open(gconfig.Dirs.data.joinpath("session.db"))
     # 添加测试账号
     user = PyDBApi.create_user("test", "267763")
-    if not user:
-        return None
-    PyDBApi.create_data_account(
-        user, "QQ", "1875557990", "MyQQPassword", "我的QQ账号")
-    PyDBApi.create_data_account(
-        user, "微信", "15859262656", "12345678", "我的微信账号")
-    return None
+    if user:
+        PyDBApi.create_data_account(
+            user, "QQ", "MyQQAccount", "MyQQPassword", "我的QQ账号"
+        )
+        PyDBApi.create_data_account(
+            user, "微信", "13344455667", "12345678", "我的微信账号"
+        )
 
 
 @subscribe(EventType.EXIT)

@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 import Prompt from './prompts/YesNo.vue';
 import { app } from './js/app';
 import { user, servers, webapi } from './js/globals'
-import { S_PASSWORD_ERROR, S_WAIT_VERIFY } from './js/status';
+import { S_EMAIL_ERROR, S_PASSWORD_ERROR, S_WAIT_VERIFY } from './js/status';
 
 const formL = reactive({
   // 激活状态
@@ -74,7 +74,9 @@ const formL = reactive({
 
   validate: {
     email() {
-      if (!formL.isFocus.email && user.email.length && !/^\d+@\w+\.\w+|test$/.test(user.email)) {
+      if (formL.isFocus.email && formL.isValid.email)
+        return
+      if (user.email.length && !/^\d+@\w+\.\w+|test$/.test(user.email)) {
         formL.hintText.email = '邮箱格式错误'
         formL.isValid.email = false
       } else {
@@ -82,7 +84,9 @@ const formL = reactive({
       }
     },
     password() {
-      if (!formL.isFocus.password && user.password.length && !/^[\w `~!@#$%^&*()_+-=\[\]{}|\\;:'",<.>/?]*$/.test(user.password)) {
+      if (formL.isFocus.password && formL.isValid.password)
+        return
+      if (user.password.length && !/^[\w `~!@#$%^&*()_+-=\[\]{}|\\;:'",<.>/?]*$/.test(user.password)) {
         formL.hintText.password = '密码应由数字字母和符号组成'
         formL.isValid.password = false
       } else {
@@ -96,6 +100,7 @@ const formL = reactive({
   },
 
   async login() {
+    formL.validate.all()
     if (!user.email) {
       formL.hintText.email = '请输入邮箱'
       formL.isValid.email = false
@@ -111,6 +116,9 @@ const formL = reactive({
       return
     await app.login()
     switch (webapi.status) {
+      case S_EMAIL_ERROR:
+        formL.hintText.email = '邮箱错误'
+        formL.isValid.email = false
       case S_PASSWORD_ERROR:
         formL.hintText.password = '密码错误'
         formL.isValid.password = false
@@ -127,8 +135,7 @@ const promptStatus = reactive({
 <template>
   <form
     class="flex flex-col m-auto p-8 w-full h-full bg-login-900 slab:max-w-md slab:h-auto slab:rounded-md slab:shadow-neutral-800 slab:shadow-md"
-    action="/" method="post" autocomplete="off" onsubmit="return false" @submit="formL.login"
-    @input="formL.validate.all">
+    action="/" method="post" autocomplete="off" onsubmit="return false" @submit="formL.login">
     <div class="text-login-400 flex justify-center items-center mt-8 mb-16 text-xl slab:mb-8">登录</div>
     <div class="space-y-8 h-full flex flex-col">
       <label class="input-container" :data-valid="true">
@@ -146,7 +153,7 @@ const promptStatus = reactive({
       </label>
       <label class="input-container" :data-valid="formL.isValid.email">
         <input class="input-box" type="text" name="" id="email" v-model="user.email" @focusin="formL.focusin.email"
-          @focusout="formL.focusout.email">
+          @focusout="formL.focusout.email" @input="formL.validate.email">
         <div class="input-title" :data-active="formL.actived.email">
           <span>邮箱</span>
           <span class="input-hint">{{ formL.hintText.email }}</span>
@@ -154,7 +161,7 @@ const promptStatus = reactive({
       </label>
       <label class="input-container" :data-valid="formL.isValid.password">
         <input class="input-box" type="password" name="" id="password" autocomplete="off" v-model="user.password"
-          @focusin="formL.focusin.password" @focusout="formL.focusout.password">
+          @focusin="formL.focusin.password" @focusout="formL.focusout.password" @input="formL.validate.password">
         <div class="input-title" :data-active="formL.actived.password">
           <span>密码</span>
           <span class="input-hint">{{ formL.hintText.password }}</span>

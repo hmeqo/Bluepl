@@ -8,12 +8,18 @@ async function logout() {
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full p-4">
-    <div>
-      <div>{{ user.name }}</div>
-      <div>{{ user.email }}</div>
+  <div class="space-y-4 flex flex-col w-full h-full p-4">
+    <div class="flex bg-white p-4 rounded-lg shadow-sm">
+      <div class="shrink-0 w-16 h-16 rounded-xl border-gray-100 border-2 border-solid overflow-hidden">
+        <img :src="user.avatar || '/useravatar/default.png'" alt="">
+      </div>
+      <div class="ml-4 overflow-hidden">
+        <div class="flex pt-2">
+          <div class="ml-2 overflow-hidden text-ellipsis">{{ user.name || 'user-' + user.uid }}</div>
+        </div>
+      </div>
     </div>
-    <div class="flex justify-center shadow-md rounded-lg mt-auto px-4 py-2 bg-white cursor-pointer" @click="logout">
+    <div class="flex justify-center shadow-sm rounded-lg px-4 py-2 bg-white cursor-pointer" @click="logout">
       退出登录
     </div>
   </div>

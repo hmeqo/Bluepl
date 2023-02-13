@@ -1,4 +1,4 @@
-import socket
+import traceback
 from smtplib import SMTP
 from email.header import Header
 from email.mime.text import MIMEText
@@ -35,9 +35,14 @@ def send_text(receivers: _t.List[str], text: str, subject: str):
     message["To"] = Header("", "UTF-8")
     message["Subject"] = Header(subject, "UTF-8")
     try:
-        with SMTP(Smtp.host, Smtp.port) as smtp:
-            smtp.login(Smtp.sender, Smtp.password)
-            smtp.sendmail(Smtp.sender, receivers, message.as_string())
+        smtp = SMTP(Smtp.host, Smtp.port)
+        smtp.login(Smtp.sender, Smtp.password)
     except Exception:
+        traceback.print_exc()
         return S_NOT_INTERNET_ERROR
+    try:
+        smtp.sendmail(Smtp.sender, receivers, message.as_string())
+    except Exception:
+        traceback.print_exc()
+        return S_EMAIL_ERROR
     return S_SUCCESS_200

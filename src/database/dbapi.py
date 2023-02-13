@@ -56,7 +56,7 @@ class DBApi(object):
 
     @staticmethod
     def create_user(email: str, password: str) -> _t.Union[User, None]:
-        """创建一个用户"""
+        """创建一个用户, 如果用户已存在返回 None"""
         raise NotImplementedError
 
     @staticmethod
@@ -110,6 +110,7 @@ class User(Record):
     name = RecordProperty("name", str, default="")
     solt = RecordProperty("solt", str, "")
     time = RecordProperty("time", int, lambda: int(time.time() * 1000))
+    avatar = RecordProperty("avatar", str, "")
 
 
 class Account(Record):

@@ -13,14 +13,14 @@ const searchFocused = ref(false)
 <template>
   <div class="flex flex-col w-full h-full overflow-hidden">
     <div class="flex p-4">
-      <form class="searchbar shrink-0 flex w-full h-full rounded-full shadow-md transition-all bg-white"
+      <div class="searchbar shrink-0 flex w-full h-full rounded-full shadow-md transition-all bg-white"
         :style="searchFocused ? '' : 'width: calc(100% - 3rem)'">
         <input class="w-full h-full px-4 rounded-full shadow-inner" type="text" name="" id="" autocomplete="off"
           @focusin="() => searchFocused = true" @focusout="() => searchFocused = false">
         <div class="group flex p-2 cursor-pointer">
           <Search></Search>
         </div>
-      </form>
+      </div>
       <div class="shrink-0 flex justify-start items-center ml-4 w-0">
         <Add class="shrink-0 group w-8 h-8" @click="app.createDataAccount"></Add>
       </div>

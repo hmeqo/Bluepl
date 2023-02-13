@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { webapi } from '../js/globals';
 import { S_NOT_INTERNET_ERROR } from '../js/status';
 
-webapi.onRequest.push(() => {
+webapi.onRequestEnd.push(() => {
   if (webapi.status == S_NOT_INTERNET_ERROR) {
     opened.value = true
   }

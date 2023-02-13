@@ -6,23 +6,21 @@ import NotInternetPrompt from './components/prompts/NotInternet.vue'
 import { user } from './components/js/globals'
 import { app } from './components/js/app'
 
-// for (var i = 0; i < 3; i++) {
-//   user.data.accounts.push({
-//     id: 1,
-//     platform: '',
-//     account: '',
-//     password: '',
-//     note: '',
-//   })
-// }
+for (var i = 0; i < 3; i++) {
+  user.data.accounts.push({
+    id: 1,
+    platform: '',
+    account: '',
+    password: '',
+    note: '',
+  })
+}
 app.init()
 </script>
 
 <template>
-  <div class="grid w-full h-full">
-    <Main v-if="user.logined"></Main>
-    <Login v-else></Login>
-    <Loading v-if="!app.inited || user.loggingIn"></Loading>
-    <NotInternetPrompt></NotInternetPrompt>
-  </div>
+  <Main v-if="user.logined"></Main>
+  <Login v-else></Login>
+  <Loading v-if="!app.inited || user.loggingIn"></Loading>
+  <NotInternetPrompt></NotInternetPrompt>
 </template>

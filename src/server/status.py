@@ -19,3 +19,5 @@ S_EXPIRED_ERROR = {"status": 403}
 S_OUT_OF_LIMIT_ERROR = {"status": 404}
 
 S_PASSWORD_ERROR = {"status": 405}
+
+S_EMAIL_ERROR = {"status": 406}

@@ -8,7 +8,7 @@ const currentScreen = ref(1);
 
 <template>
   <div class="flex flex-col w-full h-full box-border overflow-hidden">
-    <div class="flex h-full overflow-hidden bg-gray-50">
+    <div class="flex h-full overflow-hidden bg-gray-100">
       <MainScreen1 v-if="currentScreen == 1"></MainScreen1>
       <MainScreen2 v-if="currentScreen == 2"></MainScreen2>
     </div>

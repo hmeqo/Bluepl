@@ -56,6 +56,7 @@ export const app = reactive({
         if (webapi.status == S_SUCCESS_200) {
             user.logined = true
             user.save_account()
+            await app.getUserInfo()
             await app.getDataAccount()
         } else {
             user.logined = false
@@ -67,6 +68,17 @@ export const app = reactive({
         await webapi.logout()
         user.clear_account()
         user.logined = false
+    },
+
+    async getUserInfo() {
+        var info = (await webapi.getUserInfo()).data
+        console.log(info)
+        if (webapi.status != S_SUCCESS_200) {
+            return
+        }
+        user.uid = info.uid
+        user.name = info.name
+        user.avatar = info.avatar
     },
 
     async getDataAccount() {

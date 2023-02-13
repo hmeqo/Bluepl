@@ -78,7 +78,6 @@ async function save() {
   currentAccount.value.account = accountRecord.account
   currentAccount.value.password = accountRecord.password
   currentAccount.value.note = accountRecord.note
-  close()
 }
 
 function close() {
