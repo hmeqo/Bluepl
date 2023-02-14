@@ -26,7 +26,7 @@ class Files(object):
 class App(object):
     """应用信息"""
 
-    name = "Accuruna"
+    name = "Bluepl"
     debug = False
     port = 27640
 
