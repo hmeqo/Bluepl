@@ -25,7 +25,7 @@ export const app = reactive({
     async init() {
         await app.requestSession()
         if (webapi.status == S_SUCCESS_200 && user.email && user.password) {
-            await webapi.login()
+            await app.login()
         }
         app.inited = true
     },
@@ -72,7 +72,6 @@ export const app = reactive({
 
     async getUserInfo() {
         var info = (await webapi.getUserInfo()).data
-        console.log(info)
         if (webapi.status != S_SUCCESS_200) {
             return
         }

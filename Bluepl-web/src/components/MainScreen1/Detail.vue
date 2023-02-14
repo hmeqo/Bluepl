@@ -68,7 +68,7 @@ function back() {
   }
 }
 
-async function save() {
+async function save(close_flag?: boolean) {
   await app.updateDataAccount([accountRecord])
   if (webapi.status != S_SUCCESS_200) {
     return
@@ -78,6 +78,9 @@ async function save() {
   currentAccount.value.account = accountRecord.account
   currentAccount.value.password = accountRecord.password
   currentAccount.value.note = accountRecord.note
+  if (close_flag) {
+    close()
+  }
 }
 
 function close() {
@@ -109,24 +112,24 @@ async function checkDeleteAccount() {
         <Back @click="back"></Back>
       </div>
       <div class="flex justify-center items-center ml-auto">
-        <Save v-if="hasChange" class="mx-8" @click="save"></Save>
+        <Save v-if="hasChange" class="mx-8" @click="() => save()"></Save>
       </div>
       <div class="flex justify-center items-center">
         <Delete class="w-8 h-8" @click="checkDeleteAccount"></Delete>
       </div>
     </div>
-    <div class="flex items-center shrink-0 shadow-md p-4 border-b-2">
+    <div class="z-10 flex items-center shrink-0 shadow-md p-4">
       <img class="w-12 h-12 mx-2 object-contain shrink-0" :src="getPlatformUrl(accountRecord.platform)" alt="">
       <div class="flex w-full h-full ml-4s" :title="accountRecord.platform">
         <Description class="w-full" v-model="accountRecord.platform" :horizontal="true">平台</Description>
       </div>
     </div>
-    <div class="space-y-4 p-4 h-full overflow-auto">
+    <div class="space-y-4 p-4 h-full overflow-auto bg-gray-50">
       <Description v-model="accountRecord.account">账号</Description>
       <Description v-model="accountRecord.password">密码</Description>
       <Description v-model="accountRecord.note" :multiline="true">备注</Description>
     </div>
-    <YesNoPrompt :status="yesNoPromptStatus" :yes="'保存'" :no="'不保存'" @confirm="save" @cancel="close">
+    <YesNoPrompt :status="yesNoPromptStatus" :yes="'保存'" :no="'不保存'" @confirm="() => save(true)" @cancel="close">
       是否保存修改
     </YesNoPrompt>
     <YesNoPrompt :status="deletePromptStatus" :yes="'删除'" @confirm="deleteAccount"

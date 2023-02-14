@@ -26,7 +26,7 @@ def send_verification_code(receivers: _t.List[str], veri_code: str):
 def send_verification_link(receivers: _t.List[str], link: str):
     link = f"http://{sockutil.get_current_ip()}:{gconfig.App.port}/{link}"
     text = veri_link_html.format(veri_link=link)
-    send_text(receivers, text, "Verification link")
+    return send_text(receivers, text, "Verification link")
 
 
 def send_text(receivers: _t.List[str], text: str, subject: str):
