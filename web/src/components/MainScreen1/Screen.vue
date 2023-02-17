@@ -17,7 +17,7 @@ const searchFocused = ref(false)
         :style="searchFocused ? '' : 'width: calc(100% - 3rem)'">
         <input class="w-full h-full px-4 rounded-full shadow-inner" type="text" name="" id="" autocomplete="off"
           @focusin="() => searchFocused = true" @focusout="() => searchFocused = false">
-        <div class="group flex p-2 cursor-pointer">
+        <div class="group flex p-2 rounded-full cursor-pointer">
           <Search></Search>
         </div>
       </div>

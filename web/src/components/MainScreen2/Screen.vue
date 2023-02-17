@@ -15,7 +15,7 @@ async function logout() {
       </div>
       <div class="ml-4 overflow-hidden">
         <div class="flex pt-2">
-          <div class="ml-2 overflow-hidden text-ellipsis">{{ user.name || 'user-' + user.uid }}</div>
+          <div class="ml-2 overflow-hidden text-ellipsis">{{ user.name || 'uid' + user.uid }}</div>
         </div>
       </div>
     </div>

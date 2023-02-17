@@ -24,36 +24,26 @@ export const app = reactive({
 
     async init() {
         await app.requestSession()
-        if (webapi.status == S_SUCCESS_200 && user.email && user.password) {
-            await app.login()
-        }
         app.inited = true
     },
 
     async requestSession() {
-        await webapi.getSessionInfo()
-        if (webapi.status == S_SUCCESS_200) {
+        var response = await webapi.getSessionInfo()
+        if (response.status == S_SUCCESS_200) {
             if (user.email && user.password) {
                 await app.login()
             }
-            return
+            return true
         }
-        if (webapi.status == S_NOT_INTERNET_ERROR) {
-            return
+        if (response.status == S_NOT_INTERNET_ERROR) {
+            return false
         }
-        session.clear()
-        var session_info = await webapi.requestSession()
-        if (session_info) {
-            session.key = session_info.key
-            session.id = session_info.id
-            session.save()
-        }
+        return (await webapi.requestSession()).status == S_SUCCESS_200
     },
 
     async login() {
         user.loggingIn = true
-        await webapi.login()
-        if (webapi.status == S_SUCCESS_200) {
+        if ((await webapi.login()).status == S_SUCCESS_200) {
             user.logined = true
             user.save_account()
             await app.getUserInfo()
@@ -62,6 +52,7 @@ export const app = reactive({
             user.logined = false
         }
         user.loggingIn = false
+        return user.logined
     },
 
     async logout() {
@@ -71,56 +62,60 @@ export const app = reactive({
     },
 
     async getUserInfo() {
-        var info = (await webapi.getUserInfo()).data
-        if (webapi.status != S_SUCCESS_200) {
-            return
+        var response = await webapi.getUserInfo()
+        if (response.status != S_SUCCESS_200) {
+            return false
         }
+        var info = response.data
         user.uid = info.uid
         user.name = info.name
         user.avatar = info.avatar
+        return true
     },
 
     async getDataAccount() {
-        var data = (await webapi.getDataAccounts()).data
-        if (webapi.status != S_SUCCESS_200) {
-            return
+        var response = await webapi.getDataAccounts()
+        if (response.status != S_SUCCESS_200) {
+            return false
         }
-        user.data.accounts = []
+        var data = response.data
         for (const i in data) {
             user.data.accounts.push(data[i])
         }
+        return true
     },
 
     async createDataAccount() {
-        var data = await webapi.createDataAccount()
-        if (webapi.status != S_SUCCESS_200) {
-            return
+        var response = await webapi.createDataAccount()
+        if (response.status != S_SUCCESS_200) {
+            return null
         }
         var account = {
-            id: data.id,
+            id: response.id,
             platform: '',
             account: '',
             password: '',
             note: '',
         }
         user.data.accounts.push(account)
-        app.currentAccountId = data.id
+        app.currentAccountId = response.id
         return account
     },
 
     async updateDataAccount(accounts: Array<accountType>) {
-        await webapi.updateDataAccounts(accounts)
-        if (webapi.status != S_SUCCESS_200) {
+        var response = await webapi.updateDataAccounts(accounts)
+        if (response.status != S_SUCCESS_200) {
             // TODO 数据更新失败
-            return
+            return false
         }
+        return true
     },
 
     async deleteDataAccount(account_ids: Array<number>) {
-        await webapi.deleteDataAccounts(account_ids)
-        if (webapi.status != S_SUCCESS_200) {
+        var response = await webapi.deleteDataAccounts(account_ids)
+        if (response.status != S_SUCCESS_200) {
             // TODO 数据更新失败
-            return
+            return false
         }
         user.data.accounts = user.data.accounts.filter((account: accountType) => {
             for (const i in account_ids) {
@@ -130,5 +125,6 @@ export const app = reactive({
             }
             return true
         })
+        return true
     },
 })

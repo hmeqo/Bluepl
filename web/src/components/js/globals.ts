@@ -3,7 +3,8 @@ import axios from 'axios'
 import worker from './worker'
 import CryptoJS from 'crypto-js'
 import { sha256hexdigest } from './util'
-import { S_NOT_INTERNET_ERROR } from './status'
+import { S_NOT_INTERNET_ERROR, S_SESSION_ERROR, S_SUCCESS_200 } from './status'
+import { app } from './app'
 
 export type accountType = {
     id: number,
@@ -35,7 +36,6 @@ export const aes = reactive({
         return CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(text), CryptoJS.enc.Utf8.parse(session.key), {
             iv: this.iv,
             mode: CryptoJS.mode.CBC,
-            // mode: CryptoJS.mode.ECB,
             padding: CryptoJS.pad.Pkcs7,
         }).toString()
     },
@@ -44,7 +44,6 @@ export const aes = reactive({
         return CryptoJS.AES.decrypt(encrypted, CryptoJS.enc.Utf8.parse(session.key), {
             iv: this.iv,
             mode: CryptoJS.mode.CBC,
-            // mode: CryptoJS.mode.ECB,
             padding: CryptoJS.pad.Pkcs7,
         }).toString(CryptoJS.enc.Utf8)
     },
@@ -55,49 +54,40 @@ export const webapiOnRequestStart: UnwrapNestedRefs<Array<Function>> = reactive(
 export const webapiOnRequest: UnwrapNestedRefs<Array<Function>> = reactive([])
 
 export const webapi = reactive({
-    status: 0,
-
     onRequestStart: webapiOnRequestStart,
     onRequestEnd: webapiOnRequest,
 
     async postData(url: string, data?: Object) {
         for (const i in webapi.onRequestStart)
             webapi.onRequestStart[i]()
-        var result = await axios.post(url, data)
-            .then(response => {
-                var data = response.data
-                webapi.status = data.status
-                return data
-            })
-            .catch(() => {
-                webapi.status = S_NOT_INTERNET_ERROR
-                return null
-            })
+        var response = await axios.post(url, data)
+            .then(response => { return response.data })
+            .catch(() => { return { status: S_NOT_INTERNET_ERROR } })
         for (const i in webapi.onRequestEnd)
-            webapi.onRequestEnd[i]()
-        return result
+            webapi.onRequestEnd[i](response.status)
+        return response
     },
 
     async postUserData(url: string, data?: Object) {
         for (const i in webapi.onRequestStart)
             webapi.onRequestStart[i]()
-        var b = aes.encrypt(JSON.stringify(data))
-        var digest = await sha256hexdigest(session.key + b)
-        var result = await axios.post(url, {
-            sessionId: session.id,
-            digest: digest,
-            data: b,
-        }).then(response => {
-            var data = JSON.parse(aes.decrypt(response.data))
-            webapi.status = data.status
-            return data
-        }).catch(() => {
-            webapi.status = S_NOT_INTERNET_ERROR
-            return null
-        })
+        do {
+            var encryptedData = aes.encrypt(JSON.stringify(data))
+            var digest = await sha256hexdigest(session.key + encryptedData)
+            var response = await axios.post(url, {
+                sessionId: session.id,
+                digest: digest,
+                data: encryptedData,
+            }).then(response => {
+                return JSON.parse(aes.decrypt(response.data))
+            }).catch(() => {
+                return { status: S_NOT_INTERNET_ERROR }
+            })
+            if (response.status == S_SESSION_ERROR) { if (!await app.requestSession()) { break } }
+        } while (response.status == S_SESSION_ERROR);
         for (const i in webapi.onRequestEnd)
-            webapi.onRequestEnd[i]()
-        return result
+            webapi.onRequestEnd[i](response.status)
+        return response
     },
 
     async getSessionInfo() {
@@ -113,20 +103,21 @@ export const webapi = reactive({
                     p: data.p.toString(),
                     key: data.key.toString(),
                 })
-                if (webapi.status == S_NOT_INTERNET_ERROR) {
+                if (responseData.status == S_NOT_INTERNET_ERROR) {
                     return []
                 }
                 return [BigInt(responseData.key), data.e, data.p]
             })
-        if (!data) {
-            return null
+        if (!data.length) {
+            return { status: S_NOT_INTERNET_ERROR }
         }
-        var session_key: string = await worker?.postMessage('session', data)
+        session.key = await worker?.postMessage('session', data)
             .then(async (key: bigint) => {
                 return (await sha256hexdigest(key.toString())).slice(0, 32)
             })
-        var session_id = await sha256hexdigest(session_key)
-        return { key: session_key, id: session_id }
+        session.id = await sha256hexdigest(session.key)
+        session.save()
+        return { status: S_SUCCESS_200 }
     },
 
     async login() {
@@ -199,10 +190,10 @@ export const user = reactive({
     data: {
         accounts: userAccounts,
         platformToImgUrl: {
-            '': '/logos/unknow.png',
-            'qq': '/logos/qq.png',
-            'wechat': '/logos/wechat.png',
-            '微信': '/logos/wechat.png',
+            '': '/logos/unknow.webp',
+            'qq': '/logos/qq.webp',
+            'wechat': '/logos/wechat.webp',
+            '微信': '/logos/wechat.webp',
         },
     },
 

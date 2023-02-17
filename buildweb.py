@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 from src import gconfig
 
-dist_dir = Path("Bluepl-web")
+dist_dir = Path("web")
 webroot = gconfig.Dirs.webroot
 
 os.chdir(dist_dir)

@@ -135,7 +135,7 @@ const promptStatus = reactive({
 <template>
   <form
     class="flex flex-col m-auto p-8 w-full h-full bg-login-900 slab:max-w-md slab:h-auto slab:rounded-md slab:shadow-neutral-800 slab:shadow-md"
-    action="/" method="post" autocomplete="off" onsubmit="return false" @submit="formL.login">
+    action="/" method="post" autocomplete="off" onsubmit="return false">
     <div class="text-login-400 flex justify-center items-center mt-8 mb-16 text-xl slab:mb-8">登录</div>
     <div class="space-y-8 h-full flex flex-col">
       <label class="input-container" :data-valid="true">
@@ -177,7 +177,7 @@ const promptStatus = reactive({
       </label>
     </div>
     <div class="mt-auto flex justify-center">
-      <input class="bg-login-400 w-full py-2 mt-12 mb-4 rounded-md cursor-pointer" type="submit" value="登录">
+      <input class="bg-login-400 w-full py-2 mt-12 mb-4 rounded-md cursor-pointer" type="submit" value="登录" @click="formL.login">
     </div>
     <Prompt :status="promptStatus" :yes="'确定'">{{ promptStatus.text }}</Prompt>
   </form>

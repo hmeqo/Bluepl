@@ -10,7 +10,10 @@ from .. import gconfig, sockutil
 from ..gconfig import Smtp
 
 veri_html = """
-正在使用此邮箱注册账号, 验证码: {veri_code}
+<div style="display: flex; justify-content: center; align-items: center">
+    <div>正在使用此邮箱注册账号</div>
+    <div style="padding: 1rem 2rem; background: #06d;">验证码: {veri_code}</div>
+</div>
 """
 
 veri_link_html = """
