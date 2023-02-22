@@ -61,13 +61,13 @@ def require_aes_parser(func: _t.Callable[[_t.Any], _t.Union[dict, Response]]):
     """装饰器, 解析aes会话获取数据, 返回值为 Response"""
     def wrapper() -> Response:
         veri_result = veri_session()
-        session = get_session()
 
         data = veri_result["data"]
         if veri_result["error"]:
             response = app.make_response(data)
-            response.data = session.encrypt(response.data)
+            # response.data = session.encrypt(response.data)
             return response
+        session = get_session()
 
         response = func(data)
         if not isinstance(response, Response):
@@ -83,10 +83,10 @@ def require_login(func: _t.Callable[[_t.Any], _t.Union[dict, Response]]):
     def wrapper(data: _t.Any):
         dbapi = get_dbapi()
         session = get_session()
-        email = session.user_email
-        if not email:
+        uid = session.user_uid
+        if uid is None:
             return S_NOT_LOGIN
-        user = dbapi.get_user(email)
+        user = dbapi.get_user(uid=uid)
         if not user:
             return S_NOT_LOGIN
         set_user(user)

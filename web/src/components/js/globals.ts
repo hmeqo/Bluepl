@@ -79,6 +79,9 @@ export const webapi = reactive({
                 digest: digest,
                 data: encryptedData,
             }).then(response => {
+                if (response.data.startsWith("{")) {
+                    return response.data
+                }
                 return JSON.parse(aes.decrypt(response.data))
             }).catch(() => {
                 return { status: S_NOT_INTERNET_ERROR }
@@ -120,16 +123,20 @@ export const webapi = reactive({
         return { status: S_SUCCESS_200 }
     },
 
-    async login() {
+    async login(email: string, password: string, veriCode?: string) {
         return await webapi.postUserData('/login', {
-            email: user.email,
-            password: user.password,
-            veriCode: user.veriCode,
+            email: email,
+            password: password,
+            veriCode: veriCode,
         })
     },
 
     async logout() {
         return await webapi.postUserData('/logout', {})
+    },
+
+    async hadUser(uid?: number, email?: string) {
+        return await webapi.postData('/user/had', { uid, email })
     },
 
     async getUserInfo() {
@@ -176,8 +183,6 @@ export const user = reactive({
     // 登录信息
     server: localStorage.getItem('sessionServer') || servers[0].strAddr,
     email: localStorage.getItem('sessionEmail') || '',
-    password: localStorage.getItem('sessionPassword') || '',
-    veriCode: '',
 
     uid: 0,
     name: '',
@@ -200,15 +205,12 @@ export const user = reactive({
     save_account() {
         localStorage.setItem('sessionServer', user.server)
         localStorage.setItem('sessionEmail', user.email)
-        localStorage.setItem('sessionPassword', user.password)
-        user.password = ''
     },
 
     clear_account() {
-        user.password = ''
-        user.veriCode = ''
         user.data.accounts = []
-        user.save_account()
+        localStorage.removeItem('sessionServer')
+        localStorage.removeItem('sessionEmail')
     },
 })
 

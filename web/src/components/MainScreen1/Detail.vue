@@ -69,8 +69,8 @@ function back() {
 }
 
 async function save(close_flag?: boolean) {
-  await app.updateDataAccount([accountRecord])
-  if (webapi.status != S_SUCCESS_200) {
+  var success = await app.updateDataAccount([accountRecord])
+  if (!success) {
     return
   }
   hasChange.value = false

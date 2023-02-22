@@ -10,6 +10,7 @@ from .dbapi import *
 registry_type(Session)
 registry_type(User)
 registry_type(Account)
+registry_type(datetime)
 
 collections = RecordCollectionsIO()
 
@@ -25,7 +26,7 @@ def init():
 
 @subscribe(EventType.START)
 def db_open():
-    collections.open(gconfig.Dirs.data.joinpath("session.db"))
+    collections.open(gconfig.Files.database)
     # 添加测试账号
     user = PyDBApi.create_user("test", "267763")
     if user:
@@ -43,6 +44,16 @@ def db_close():
 
 
 class PyDBApi(DBApi):
+
+    @staticmethod
+    def login(session: Session, user: User):
+        session.user_uid = user.uid
+        collections.save()
+
+    @staticmethod
+    def logout(session: Session):
+        session.user_uid = None
+        collections.save()
 
     @staticmethod
     def get_available_session(session_id):
@@ -80,7 +91,9 @@ class PyDBApi(DBApi):
         del registries[email]
 
     @staticmethod
-    def get_user(email):
+    def get_user(uid: _t.Optional[int] = None, email: _t.Optional[str] = None) -> _t.Union[User, None]:
+        if uid is not None:
+            return users.get(uid)
         for user in users.values():
             if user.email == email:
                 return user
@@ -88,7 +101,7 @@ class PyDBApi(DBApi):
 
     @staticmethod
     def create_user(email, password) -> _t.Union[User, None]:
-        if PyDBApi.get_user(email):
+        if PyDBApi.get_user(email=email):
             return None
         user = generate_user(email, password)
         users.add(user)
@@ -97,12 +110,12 @@ class PyDBApi(DBApi):
 
     @staticmethod
     def get_data_accounts(user):
-        return tuple(filter(lambda x: x.uid == user.uid, accounts.values()))
+        return tuple(filter(lambda x: x.user_uid == user.uid, accounts.values()))
 
     @staticmethod
     def create_data_account(user, platform="", account="", password="", note="") -> Account:
         account = Account(
-            uid=user.uid,
+            user_uid=user.uid,
             platform=platform,
             account=account,
             password=password,
@@ -117,7 +130,7 @@ class PyDBApi(DBApi):
         uid = user.uid
         for account_params in account_list:
             account = accounts[account_params["id"]]
-            if account.uid != uid:
+            if account.user_uid != uid:
                 continue
             account.platform = account_params.get("platform")
             account.account = account_params.get("account")
@@ -129,6 +142,6 @@ class PyDBApi(DBApi):
     def delete_data_accounts(user, account_ids):
         for account_id in account_ids:
             account = accounts.get(account_id)
-            if account and account.uid == user.uid:
+            if account and account.user_uid == user.uid:
                 del accounts[account_id]
         collections.save()

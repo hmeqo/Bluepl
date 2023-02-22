@@ -21,6 +21,7 @@ class Files(object):
     """文件路径"""
 
     icon = Dirs.webroot.joinpath("favicon.ico")
+    database = Dirs.data.joinpath("bluepl.db")
 
 
 class App(object):

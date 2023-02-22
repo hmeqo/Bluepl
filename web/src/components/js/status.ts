@@ -4,6 +4,8 @@ export const S_NOT_ACCOUNT = 100
 
 export const S_WAIT_VERIFY = 101
 
+export const S_USER_ALREADY_EXISTS = 102
+
 export const S_NOT_LOGIN = 110
 
 export const S_SUCCESS_200 = 200

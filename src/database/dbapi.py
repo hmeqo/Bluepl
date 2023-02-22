@@ -4,10 +4,10 @@
 """
 
 from __future__ import annotations
-import time
+import datetime
 import typing as _t
 
-from ..ahfakit.datautil.recordcollection import AutoincProperty, RecordProperty, Record
+from ..ahfakit.datautil.recordcollection import NONE_TYPE, AutoincProperty, RecordProperty, Record
 from ..ahfakit.simplecrypto.aes import AES
 
 api: _t.Type[DBApi]
@@ -23,6 +23,16 @@ def get_dbapi():
 
 
 class DBApi(object):
+
+    @staticmethod
+    def login(session: Session, user: User):
+        """登录"""
+        raise NotImplementedError
+
+    @staticmethod
+    def logout(session: Session):
+        """退出登录"""
+        raise NotImplementedError
 
     @staticmethod
     def get_available_session(session_id: str) -> _t.Union[Session, None]:
@@ -50,7 +60,7 @@ class DBApi(object):
         raise NotImplementedError
 
     @staticmethod
-    def get_user(email: str) -> _t.Union[User, None]:
+    def get_user(uid: _t.Optional[int] = None, email: _t.Optional[str] = None) -> _t.Union[User, None]:
         """获取一个用户"""
         raise NotImplementedError
 
@@ -83,10 +93,10 @@ class DBApi(object):
 class Session(Record):
 
     id = RecordProperty("id", str)
-    time = RecordProperty("time", int, lambda: int(time.time() * 1000))
+    time = RecordProperty("time", datetime.datetime, lambda: datetime.datetime.now())
     age = RecordProperty("age", int, 1800)
     key = RecordProperty("key", bytes)
-    user_email = RecordProperty("user", str, "")
+    user_uid = RecordProperty("user_uid", (int, NONE_TYPE))
 
     def __init__(self, properties: _t.Optional[_t.Dict[str, _t.Any]] = None, **kwds):
         super().__init__(properties, **kwds)
@@ -109,14 +119,14 @@ class User(Record):
     password = RecordProperty("password", str)
     name = RecordProperty("name", str, default="")
     solt = RecordProperty("solt", str, "")
-    time = RecordProperty("time", int, lambda: int(time.time() * 1000))
+    time = RecordProperty("time", datetime.datetime, lambda: datetime.datetime.now())
     avatar = RecordProperty("avatar", str, "")
 
 
 class Account(Record):
 
     id = AutoincProperty("id")
-    uid = RecordProperty("uid", int)
+    user_uid = RecordProperty("user_uid", int)
     platform = RecordProperty("platform", str, "")
     account = RecordProperty("account", str, "")
     password = RecordProperty("password", str, "")
@@ -127,20 +137,20 @@ class Registry(Record):
 
     email = id = RecordProperty("email", str)
     veri_code = RecordProperty("veri_code", str)
-    time = RecordProperty("time", int, lambda: int(time.time() * 1000))
+    time = RecordProperty("time", datetime.datetime, lambda: datetime.datetime.now())
     age = RecordProperty("age", int, 180)
 
     def is_available(self):
         return time_not_expired(self.time, self.age)
 
 
-def time_not_expired(time_: int, age: int) -> bool:
+def time_not_expired(time_: datetime.datetime, age: int) -> bool:
     """
     Args:
         t (int): time ms
         age (int): age seconds
     """
-    if time.time() - time_/1000 < age:
+    if (datetime.datetime.now() - time_).seconds < age:
         return True
     return False
 

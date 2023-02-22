@@ -4,6 +4,8 @@ S_NOT_ACCOUNT = {"status": 100}
 
 S_WAIT_VERIFY = {"status": 101}
 
+S_USER_ALREADY_EXISTS = {"status": 102}
+
 S_NOT_LOGIN = {"status": 110}
 
 S_SUCCESS_200 = {"status": 200}

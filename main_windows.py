@@ -2,9 +2,8 @@ import webview
 
 from src import gconfig, server
 from src.event import EventType, emit
-from src.database import pydb
-
-pydb.init()
+# from src.database import pydb
+from src.database import sqlitedb
 
 
 class App(object):
@@ -21,7 +20,9 @@ class App(object):
 
 
 if __name__ == "__main__":
-    # gconfig.App.debug = True
+    gconfig.App.debug = True
     gconfig.init()
+    # pydb.init()
+    sqlitedb.init()
     app = App()
     app.run()

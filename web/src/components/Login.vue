@@ -1,24 +1,43 @@
 <script lang="ts" setup>
-import { reactive } from 'vue'
-import Prompt from './prompts/YesNo.vue';
+import { reactive, ref } from 'vue'
 import { app } from './js/app';
-import { user, servers, webapi } from './js/globals'
-import { S_EMAIL_ERROR, S_PASSWORD_ERROR, S_WAIT_VERIFY } from './js/status';
+import { user, servers } from './js/globals'
+import { S_EMAIL_ERROR, S_PASSWORD_ERROR, S_USER_ALREADY_EXISTS, S_WAIT_VERIFY } from './js/status';
 
 const formL = reactive({
+  value: {
+    password: '',
+    confirmPassword: '',
+    veriCode: '',
+  },
+
   // 激活状态
   actived: {
     server: !!user.server,
     email: !!user.email,
-    password: !!user.password,
-    veriCode: !!user.veriCode,
+    password: false,
+    confirmPassword: false,
+    veriCode: false,
   },
 
   isFocus: {
     server: false,
     email: false,
     password: false,
+    confirmPassword: false,
     veriCode: false,
+  },
+
+  hintText: {
+    email: '',
+    password: '',
+    confirmPassword: '',
+  },
+
+  isValid: {
+    email: true,
+    password: true,
+    confirmPassword: true,
   },
 
   // 判断函数
@@ -34,6 +53,10 @@ const formL = reactive({
     password: () => {
       formL.actived.password = true
       formL.isFocus.password = true
+    },
+    confirmPassword: () => {
+      formL.actived.confirmPassword = true
+      formL.isFocus.confirmPassword = true
     },
     veriCode: () => {
       formL.actived.veriCode = true
@@ -52,24 +75,19 @@ const formL = reactive({
       formL.validate.email()
     },
     password: () => {
-      if (!user.password) formL.actived.password = false
+      if (!formL.value.password) formL.actived.password = false
       formL.isFocus.password = false
       formL.validate.password()
     },
+    confirmPassword: () => {
+      if (!formL.value.confirmPassword) formL.actived.confirmPassword = false
+      formL.isFocus.confirmPassword = false
+      formL.validate.confirmPassword()
+    },
     veriCode: () => {
-      if (!user.veriCode) formL.actived.veriCode = false
+      if (!formL.value.veriCode) formL.actived.veriCode = false
       formL.isFocus.veriCode = false
     },
-  },
-
-  hintText: {
-    email: '',
-    password: '',
-  },
-
-  isValid: {
-    email: true,
-    password: true,
   },
 
   validate: {
@@ -82,15 +100,32 @@ const formL = reactive({
       } else {
         formL.isValid.email = true
       }
+      app.hadUser(undefined, user.email).then(flag => {
+        if (flag) {
+          needConfirmPassword.value = false
+        } else {
+          needConfirmPassword.value = true
+        }
+      })
     },
     password() {
       if (formL.isFocus.password && formL.isValid.password)
         return
-      if (user.password.length && !/^[\w `~!@#$%^&*()_+-=\[\]{}|\\;:'",<.>/?]*$/.test(user.password)) {
+      if (formL.value.password.length && !/^[\w `~!@#$%^&*()_+-=\[\]{}|\\;:'",<.>/?]*$/.test(formL.value.password)) {
         formL.hintText.password = '密码应由数字字母和符号组成'
         formL.isValid.password = false
       } else {
         formL.isValid.password = true
+      }
+    },
+    confirmPassword() {
+      if (formL.isFocus.confirmPassword && formL.isValid.confirmPassword)
+        return
+      if (formL.value.confirmPassword.length && formL.value.confirmPassword != formL.value.password) {
+        formL.hintText.confirmPassword = '确认密码与密码不一致'
+        formL.isValid.confirmPassword = false
+      } else {
+        formL.isValid.confirmPassword = true
       }
     },
     all() {
@@ -105,31 +140,44 @@ const formL = reactive({
       formL.hintText.email = '请输入邮箱'
       formL.isValid.email = false
     }
-    if (!user.password) {
+    if (!formL.value.password) {
       formL.hintText.password = '请输入密码'
       formL.isValid.password = false
-    } else if (user.password.length < 4 || user.password.length > 32) {
+    } else if (formL.value.password.length < 4 || formL.value.password.length > 32) {
       formL.hintText.password = '密码长度应为4-32位'
       formL.isValid.password = false
     }
-    if (!(formL.isValid.email && formL.isValid.password))
+    if (!(formL.isValid.email && formL.isValid.password)) {
       return
-    await app.login()
-    switch (webapi.status) {
+    }
+    if (needConfirmPassword.value && !formL.isValid.confirmPassword) {
+      return
+    }
+    if (awaitVerify.value && !formL.value.veriCode) {
+      return
+    }
+    switch (await app.login(user.email, formL.value.password, formL.value.veriCode)) {
       case S_EMAIL_ERROR:
         formL.hintText.email = '邮箱错误'
         formL.isValid.email = false
+        break
       case S_PASSWORD_ERROR:
         formL.hintText.password = '密码错误'
         formL.isValid.password = false
+        break
+      case S_WAIT_VERIFY:
+        awaitVerify.value = true
+        break
+      default:
+        awaitVerify.value = false
+        break
     }
   },
 })
 
-const promptStatus = reactive({
-  opened: false,
-  text: '',
-})
+const needConfirmPassword = ref(false)
+
+const awaitVerify = ref(false)
 </script>
 
 <template>
@@ -138,9 +186,9 @@ const promptStatus = reactive({
     action="/" method="post" autocomplete="off" onsubmit="return false">
     <div class="text-login-400 flex justify-center items-center mt-8 mb-16 text-xl slab:mb-8">登录</div>
     <div class="space-y-8 h-full flex flex-col">
-      <label class="input-container" :data-valid="true">
-        <select v-if="servers.length > 1" class="input-box" name="" id="server" v-model="user.server"
-          :title="user.server" @focusin="formL.focusin.server" @focusout="formL.focusout.server">
+      <label style="display: none;" class="input-container" :data-valid="true">
+        <select v-if="servers.length > 1" class="input-box" name="" id="server" v-model="user.server" :title="user.server"
+          @focusin="formL.focusin.server" @focusout="formL.focusout.server">
           <option v-for="server in servers" :value="server.strAddr" :title="server.strAddr">{{ server.name }}
           </option>
         </select>
@@ -160,15 +208,25 @@ const promptStatus = reactive({
         </div>
       </label>
       <label class="input-container" :data-valid="formL.isValid.password">
-        <input class="input-box" type="password" name="" id="password" autocomplete="off" v-model="user.password"
+        <input class="input-box" type="password" name="" id="password" autocomplete="off" v-model="formL.value.password"
           @focusin="formL.focusin.password" @focusout="formL.focusout.password" @input="formL.validate.password">
         <div class="input-title" :data-active="formL.actived.password">
           <span>密码</span>
           <span class="input-hint">{{ formL.hintText.password }}</span>
         </div>
       </label>
-      <label v-if="webapi.status == S_WAIT_VERIFY" class="input-container" :data-valid="true">
-        <input class="input-box" type="text" name="" id="veri-code" v-model="user.veriCode"
+      <label v-if="needConfirmPassword" class="input-container"
+        :data-valid="formL.isValid.confirmPassword">
+        <input class="input-box" type="password" name="" id="confirmPassword" autocomplete="off"
+          v-model="formL.value.confirmPassword" @focusin="formL.focusin.confirmPassword"
+          @focusout="formL.focusout.confirmPassword" @input="formL.validate.confirmPassword">
+        <div class="input-title" :data-active="formL.actived.confirmPassword">
+          <span>确认密码</span>
+          <span class="input-hint">{{ formL.hintText.confirmPassword }}</span>
+        </div>
+      </label>
+      <label v-if="awaitVerify" class="input-container" :data-valid="true">
+        <input class="input-box" type="text" name="" id="veri-code" v-model="formL.value.veriCode"
           @focusin="formL.focusin.veriCode" @focusout="formL.focusout.veriCode">
         <div class="input-title" :data-active="formL.actived.veriCode">
           <span>验证码</span>
@@ -177,9 +235,9 @@ const promptStatus = reactive({
       </label>
     </div>
     <div class="mt-auto flex justify-center">
-      <input class="bg-login-400 w-full py-2 mt-12 mb-4 rounded-md cursor-pointer" type="submit" value="登录" @click="formL.login">
+      <input class="bg-login-400 w-full py-2 mt-12 mb-4 rounded-md cursor-pointer" type="submit" value="登录"
+        @click="formL.login">
     </div>
-    <Prompt :status="promptStatus" :yes="'确定'">{{ promptStatus.text }}</Prompt>
   </form>
 </template>
 
@@ -191,6 +249,16 @@ const promptStatus = reactive({
 
   50% {
     background-color: #f009;
+  }
+}
+
+@keyframes verify-container {
+  0% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: #8888;
   }
 }
 
@@ -221,4 +289,7 @@ const promptStatus = reactive({
 .input-hint {
   @apply hidden text-sm text-red-500 transition-all;
 }
-</style>
+
+.appear-container {
+  animation: 0.8s ease-out alternate verify-container;
+}</style>

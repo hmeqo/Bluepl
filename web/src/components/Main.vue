@@ -1,9 +1,14 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import MainScreen1 from './MainScreen1/Screen.vue'
 import MainScreen2 from './MainScreen2/Screen.vue'
+import { app } from './js/app'
+import { user } from './js/globals'
 
-const currentScreen = ref(1);
+const currentScreen = ref(1)
+
+app.getUserInfo()
+app.getDataAccount()
 </script>
 
 <template>

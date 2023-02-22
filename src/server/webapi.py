@@ -46,7 +46,9 @@ def app_index():
 @requirer.require_json_data(DictForm({"id": Field(str)}))
 def app_session_info(data: dict):
     session = get_dbapi().get_available_session(data["id"])
-    return {**S_SUCCESS_200} if session else {**S_SESSION_ERROR}
+    if session is None:
+        return S_SESSION_ERROR
+    return {**S_SUCCESS_200, "logined": session.user_uid is not None}
 
 
 @app.route("/session/create", methods=["POST"])
@@ -74,7 +76,7 @@ def app_session_create(data: dict):
 @app.route("/login", methods=["POST"])
 @requirer.require_aes_parser
 @requirer.require_json_data(DictForm({
-    "email": Field(str, validator=lambda x: bool(pattern_email.match(x))),
+    "email": Field(str, validator=lambda x: bool(pattern_email.match(x)) and len(x) <= 50),
     "password": Field(str, validator=lambda x: bool(pattern_password.match(x))),
     "veriCode": Field(str, ""),
 }))
@@ -85,10 +87,11 @@ def app_login(json_data: dict):
     password: str = json_data["password"]
     veri_code: str = json_data["veriCode"]
     # 登录
-    user = dbapi.get_user(email)
+    user = dbapi.get_user(email=email)
     if user:
-        if user.password == hashlib.md5((password + user.solt).encode()).hexdigest():
-            requirer.get_session().user_email = email
+        password = hashlib.md5((password + user.solt).encode()).hexdigest()
+        if password == user.password:
+            dbapi.login(requirer.get_session(), user)
             return S_SUCCESS_200
         return S_PASSWORD_ERROR
     # 注册
@@ -103,16 +106,22 @@ def app_login(json_data: dict):
             return S_WAIT_VERIFY
         if veri_code.upper() == registry.veri_code:
             # 验证成功后注册
-            dbapi.create_user(registry.email, password)
+            user = dbapi.create_user(registry.email, password)
+            if user is None:
+                return S_USER_ALREADY_EXISTS
             dbapi.delete_registry(registry.email)
+            dbapi.login(requirer.get_session(), user)
             return S_SUCCESS_200
         return S_WAIT_VERIFY
-    # 本地端直接注册无需验证
-    if request.host.split(":")[0] == "127.0.0.1":
-        dbapi.create_user(email, password)
-        return S_SUCCESS_200
+    # # 本地端直接注册无需验证
+    # if request.host.split(":")[0] == "127.0.0.1":
+    #     dbapi.create_user(email, password)
+    #     if user is None:
+    #         return S_USER_ALREADY_EXISTS
+    #     dbapi.login(requirer.get_session(), user)
+    #     return S_SUCCESS_200
     # 生成验证码, 发送邮件
-    veri_code = "".join(random.choices(string.hexdigits, k=5)).upper()
+    veri_code = "".join(random.choices(string.hexdigits, k=8)).upper()
     status = send_verification_code([email], veri_code)
     if status == S_NOT_INTERNET_ERROR:
         return S_NOT_INTERNET_ERROR
@@ -120,18 +129,36 @@ def app_login(json_data: dict):
     return S_WAIT_VERIFY
 
 
+@app.route("/logout", methods=["POST"])
+@requirer.require_login
+def app_logout(*_):
+    dbapi = get_dbapi()
+    dbapi.logout(requirer.get_session())
+    return S_SUCCESS_200
+
+
+@app.route("/user/had", methods=["POST"])
+@requirer.require_ensure_response
+@requirer.require_json_data(DictForm({
+    "uid": Field(int, nullable=True),
+    "email": Field(str, ""),
+}))
+def app_had_user(json_data: dict):
+    dbapi = get_dbapi()
+    uid = json_data["uid"]
+    email = json_data["email"]
+    had_user = False
+    if uid is not None:
+        had_user = dbapi.get_user(uid=uid) is not None
+    elif email:
+        had_user = dbapi.get_user(email=email) is not None
+    return {**S_SUCCESS_200, "hadUser": had_user}
+
+
 @app.route("/verification/<path:code>")
 def app_verification(code):
     # TODO
     pass
-
-
-@app.route("/logout", methods=["POST"])
-@requirer.require_login
-def app_logout(*_):
-    session = requirer.get_session()
-    session.user_email = ""
-    return S_SUCCESS_200
 
 
 @app.route("/user/info", methods=["POST"])
@@ -166,10 +193,10 @@ def app_user_data_accounts(*_):
 @app.route("/user/accounts/create", methods=["POST"])
 @requirer.require_login
 @requirer.require_json_data(DictForm({
-    "platform": Field(str, ""),
-    "account": Field(str, ""),
-    "password": Field(str, ""),
-    "note": Field(str, ""),
+    "platform": Field(str, "", validator=lambda x: len(x) < 50),
+    "account": Field(str, "", validator=lambda x: len(x) < 50),
+    "password": Field(str, "", validator=lambda x: len(x) < 100),
+    "note": Field(str, "", validator=lambda x: len(x) < 200),
 }))
 def app_user_data_create_account(json_data: dict):
     dbapi = get_dbapi()
@@ -185,10 +212,10 @@ def app_user_data_create_account(json_data: dict):
 @requirer.require_json_data(ListForm(
     DictForm({
         "id": Field(int),
-        "platform": Field(str, ""),
-        "account": Field(str, ""),
-        "password": Field(str, ""),
-        "note": Field(str, ""),
+        "platform": Field(str, "", validator=lambda x: len(x) < 50),
+        "account": Field(str, "", validator=lambda x: len(x) < 50),
+        "password": Field(str, "", validator=lambda x: len(x) < 100),
+        "note": Field(str, "", validator=lambda x: len(x) < 200),
     })
 ))
 def app_user_data_update_accounts(json_data: _t.List[dict]):

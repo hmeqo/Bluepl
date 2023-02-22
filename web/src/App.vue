@@ -19,8 +19,10 @@ app.init()
 </script>
 
 <template>
-  <Main v-if="user.logined"></Main>
-  <Login v-else></Login>
-  <Loading v-if="!app.inited || user.loggingIn"></Loading>
-  <NotInternetPrompt></NotInternetPrompt>
+  <div class="dark grid w-full h-full overflow-hidden">
+    <Main v-if="user.logined"></Main>
+    <Login v-else></Login>
+    <Loading v-if="!app.inited || user.loggingIn"></Loading>
+    <NotInternetPrompt></NotInternetPrompt>
+  </div>
 </template>

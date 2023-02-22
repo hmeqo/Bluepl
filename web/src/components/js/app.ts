@@ -30,8 +30,8 @@ export const app = reactive({
     async requestSession() {
         var response = await webapi.getSessionInfo()
         if (response.status == S_SUCCESS_200) {
-            if (user.email && user.password) {
-                await app.login()
+            if (response.logined) {
+                user.logined = true
             }
             return true
         }
@@ -41,24 +41,31 @@ export const app = reactive({
         return (await webapi.requestSession()).status == S_SUCCESS_200
     },
 
-    async login() {
+    async login(email: string, password: string, veriCode?: string) {
         user.loggingIn = true
-        if ((await webapi.login()).status == S_SUCCESS_200) {
-            user.logined = true
+        var status: number = (await webapi.login(email, password, veriCode)).status
+        if (status == S_SUCCESS_200) {
             user.save_account()
-            await app.getUserInfo()
-            await app.getDataAccount()
+            user.logined = true
         } else {
             user.logined = false
         }
         user.loggingIn = false
-        return user.logined
+        return status
     },
 
     async logout() {
         await webapi.logout()
         user.clear_account()
         user.logined = false
+    },
+
+    async hadUser(uid?: number, email?: string) {
+        var response = await webapi.hadUser(uid, email)
+        if (response.status != S_SUCCESS_200) {
+            return false
+        }
+        return response.hadUser == true
     },
 
     async getUserInfo() {
