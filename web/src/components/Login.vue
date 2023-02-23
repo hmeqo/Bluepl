@@ -94,14 +94,16 @@ const formL = reactive({
     email() {
       if (formL.isFocus.email && formL.isValid.email)
         return
-      if (user.email.length && !/^\d+@\w+\.\w+|test$/.test(user.email)) {
+      if (!user.email.length) {
+        formL.isValid.email = true
+        return
+      }
+      if (!/^\d+@\w+\.\w+|test$/.test(user.email)) {
         formL.hintText.email = '邮箱格式错误'
         formL.isValid.email = false
-      } else {
-        formL.isValid.email = true
       }
-      app.hadUser(undefined, user.email).then(flag => {
-        if (flag) {
+      app.hadUser(undefined, user.email).then(hadUser => {
+        if (hadUser == null || hadUser) {
           needConfirmPassword.value = false
         } else {
           needConfirmPassword.value = true
@@ -111,21 +113,25 @@ const formL = reactive({
     password() {
       if (formL.isFocus.password && formL.isValid.password)
         return
-      if (formL.value.password.length && !/^[\w `~!@#$%^&*()_+-=\[\]{}|\\;:'",<.>/?]*$/.test(formL.value.password)) {
+      if (!formL.value.password.length) {
+        formL.isValid.password = true
+        return
+      }
+      if (!/^[\w `~!@#$%^&*()_+-=\[\]{}|\\;:'",<.>/?]*$/.test(formL.value.password)) {
         formL.hintText.password = '密码应由数字字母和符号组成'
         formL.isValid.password = false
-      } else {
-        formL.isValid.password = true
       }
     },
     confirmPassword() {
       if (formL.isFocus.confirmPassword && formL.isValid.confirmPassword)
         return
-      if (formL.value.confirmPassword.length && formL.value.confirmPassword != formL.value.password) {
+      if (!formL.value.confirmPassword.length) {
+        formL.isValid.confirmPassword = true
+        return
+      }
+      if (formL.value.confirmPassword != formL.value.password) {
         formL.hintText.confirmPassword = '确认密码与密码不一致'
         formL.isValid.confirmPassword = false
-      } else {
-        formL.isValid.confirmPassword = true
       }
     },
     all() {
@@ -156,7 +162,8 @@ const formL = reactive({
     if (awaitVerify.value && !formL.value.veriCode) {
       return
     }
-    switch (await app.login(user.email, formL.value.password, formL.value.veriCode)) {
+    var status = await app.login(user.email, formL.value.password, formL.value.veriCode)
+    switch (status) {
       case S_EMAIL_ERROR:
         formL.hintText.email = '邮箱错误'
         formL.isValid.email = false
@@ -200,8 +207,8 @@ const awaitVerify = ref(false)
         </div>
       </label>
       <label class="input-container" :data-valid="formL.isValid.email">
-        <input class="input-box" type="text" name="" id="email" autocomplete="off" v-model="user.email" @focusin="formL.focusin.email"
-          @focusout="formL.focusout.email" @input="formL.validate.email" @keydown="">
+        <input class="input-box" type="text" name="" id="email" autocomplete="off" v-model="user.email"
+          @focusin="formL.focusin.email" @focusout="formL.focusout.email" @input="formL.validate.email" @keydown="">
         <div class="input-title" :data-active="formL.actived.email">
           <span>邮箱</span>
           <span class="input-hint">{{ formL.hintText.email }}</span>
@@ -215,8 +222,7 @@ const awaitVerify = ref(false)
           <span class="input-hint">{{ formL.hintText.password }}</span>
         </div>
       </label>
-      <label v-if="needConfirmPassword" class="input-container"
-        :data-valid="formL.isValid.confirmPassword">
+      <label v-if="needConfirmPassword" class="input-container" :data-valid="formL.isValid.confirmPassword">
         <input class="input-box" type="password" name="" id="confirmPassword" autocomplete="off"
           v-model="formL.value.confirmPassword" @focusin="formL.focusin.confirmPassword"
           @focusout="formL.focusout.confirmPassword" @input="formL.validate.confirmPassword">
@@ -292,4 +298,5 @@ const awaitVerify = ref(false)
 
 .appear-container {
   animation: 0.8s ease-out alternate verify-container;
-}</style>
+}
+</style>

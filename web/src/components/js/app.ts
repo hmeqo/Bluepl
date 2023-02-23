@@ -1,6 +1,6 @@
 import { reactive } from "vue";
 import { accountType, user, webapi } from "./globals";
-import { S_NOT_INTERNET_ERROR, S_SUCCESS_200 } from "./status";
+import { S_NOT_INTERNET_ERROR, S_SESSION_ERROR, S_SUCCESS_200 } from "./status";
 
 export function getAccountById(accountId: number) {
     for (const i in user.data.accounts) {
@@ -29,26 +29,35 @@ export const app = reactive({
 
     async requestSession() {
         var response = await webapi.getSessionInfo()
-        if (response.status == S_SUCCESS_200) {
-            user.logined = response.logined
-            if (!user.logined && user.password) {
-                await app.login(user.email, user.password)
-            }
+        if (response.logined) {
+            await app.initializeUserData()
+            return
+        }
+        if (response.status == S_SESSION_ERROR) {
+            response = await webapi.createSession()
+        }
+        if (response.status == S_SUCCESS_200 && user.password) {
+            await app.login(user.email, user.password)
             return true
         }
-        if (response.status == S_NOT_INTERNET_ERROR) {
-            return false
-        }
-        return (await webapi.requestSession()).status == S_SUCCESS_200
+        user.logined = false
+        return false
+    },
+
+    async initializeUserData() {
+        user.logined = true
+        user.clear_account()
+        user.save_account()
+        await app.getUserInfo()
+        await app.getDataAccount()
     },
 
     async login(email: string, password: string, veriCode?: string) {
         user.loggingIn = true
         var status: number = (await webapi.login(email, password, veriCode)).status
         if (status == S_SUCCESS_200) {
-            user.save_account()
             user.password = password
-            user.logined = true
+            await app.initializeUserData()
         } else {
             user.logined = false
         }
@@ -64,6 +73,9 @@ export const app = reactive({
 
     async hadUser(uid?: number, email?: string) {
         var response = await webapi.hadUser(uid, email)
+        if (response.status == S_NOT_INTERNET_ERROR) {
+            return null
+        }
         if (response.status != S_SUCCESS_200) {
             return false
         }

@@ -101,9 +101,11 @@ class _SqliteDBApi(DBApi):
 
     @staticmethod
     def create_session(id: str, key: bytes) -> None:
-        time = datetime2str(datetime.datetime.now())
+        session = Session(id=id, key=key)
+        time = datetime2str(session.time)
+        age = session.age
         cursor.execute(
-            f"INSERT INTO Session (id, Time, key) VALUES ('{id}', '{time}', '{key.decode()}')")
+            f"INSERT INTO Session (id, Time, Age, key) VALUES ('{id}', '{time}', {age}, '{key.decode()}')")
         connection.commit()
 
     @staticmethod

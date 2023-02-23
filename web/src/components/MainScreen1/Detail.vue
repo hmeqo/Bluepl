@@ -11,6 +11,8 @@ import { isMobile } from '../js/util'
 
 const hasChange = ref(false)
 
+const elemDescription = ref(null)
+
 const yesNoPromptStatus = reactive({ opened: false })
 
 const deletePromptStatus = reactive({ opened: false })
@@ -33,6 +35,9 @@ const accountRecord: UnwrapNestedRefs<accountType> = reactive({
 
 watch(app, () => {
   if (app.currentAccountId != -1) {
+    if (elemDescription.value == null) {return}
+    var elem: Element = elemDescription.value
+    elem.scrollTo(0, 0)
     currentAccount.value = getAccountById(app.currentAccountId)
     accountRecord.id = currentAccount.value.id
     accountRecord.platform = currentAccount.value.platform
@@ -74,6 +79,7 @@ async function save(close_flag?: boolean) {
     return
   }
   hasChange.value = false
+  currentAccount.value = getAccountById(app.currentAccountId)
   currentAccount.value.platform = accountRecord.platform
   currentAccount.value.account = accountRecord.account
   currentAccount.value.password = accountRecord.password
@@ -109,7 +115,7 @@ async function checkDeleteAccount() {
   <div class="com-detail absolute top-0 grid justify-center items-center w-full h-full transition-all duration-300"
     :class="app.currentAccountId != -1 ? 'left-0 opacity-100' : 'left-full opacity-0 slab:left-0'"
     :data-opened="app.currentAccountId != -1">
-    <div style="max-height: 560px" class="z-10 flex flex-col w-full h-full bg-white overflow-hidden shadow-xl slab:w-96 slab:h-4/5 slab:rounded-lg">
+    <div class="z-10 flex flex-col w-full h-full bg-white overflow-hidden shadow-xl slab:h-4/6 slab:rounded-lg">
       <div class="flex pt-4 px-4">
         <div class="flex justify-center items-center">
           <Back v-if="isMobile" @click="back"></Back>
@@ -127,7 +133,7 @@ async function checkDeleteAccount() {
           <Description class="w-full" v-model="accountRecord.platform" :horizontal="true">平台</Description>
         </div>
       </div>
-      <div class="space-y-4 p-4 h-full overflow-auto bg-gray-50">
+      <div ref="elemDescription" class="space-y-4 p-4 h-full overflow-auto bg-gray-50">
         <Description v-model="accountRecord.account">账号</Description>
         <Description v-model="accountRecord.password">密码</Description>
         <Description v-model="accountRecord.note" :multiline="true">备注</Description>

@@ -79,14 +79,17 @@ export const webapi = reactive({
                 digest: digest,
                 data: encryptedData,
             }).then(response => {
-                if (response.data.startsWith("{")) {
-                    return response.data
+                try {
+                    return JSON.parse(aes.decrypt(response.data))
+                } catch (error) {
+                    return { status: S_SESSION_ERROR }
                 }
-                return JSON.parse(aes.decrypt(response.data))
             }).catch(() => {
                 return { status: S_NOT_INTERNET_ERROR }
             })
-            if (response.status == S_SESSION_ERROR) { if (!await app.requestSession()) { break } }
+            if (response.status == S_SESSION_ERROR) {
+                if (!await app.requestSession()) { break }
+            }
         } while (response.status == S_SESSION_ERROR);
         for (const i in webapi.onRequestEnd)
             webapi.onRequestEnd[i](response.status)
@@ -97,7 +100,7 @@ export const webapi = reactive({
         return await webapi.postData('/session/info', { id: session.id })
     },
 
-    async requestSession() {
+    async createSession() {
         // 在新线程中计算DH算法所需的 p, g, key
         var data: bigint[] = await worker?.postMessage('session')
             .then(async (data: any) => {
@@ -218,8 +221,7 @@ export const user = reactive({
 
     clear_account() {
         user.data.accounts = []
-        localStorage.removeItem('sessionServer')
-        localStorage.removeItem('sessionEmail')
+        localStorage.clear()
     },
 })
 

@@ -2,14 +2,10 @@
 import { ref } from 'vue';
 import MainScreen1 from './MainScreen1/Screen.vue'
 import MainScreen2 from './MainScreen2/Screen.vue'
-import { app } from './js/app'
 
 const currentTabIndex = ref(0)
 
 const tabs = [MainScreen1, MainScreen2]
-
-app.getUserInfo()
-app.getDataAccount()
 </script>
 
 <template>

@@ -10,6 +10,9 @@ async function logout() {
 }
 
 async function submitName() {
+  if (name.value == user.name) {
+    return
+  }
   if (await app.updateUserInfo(name.value)) {
     user.name = name.value
   } else {
