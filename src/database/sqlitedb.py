@@ -2,14 +2,12 @@ import sqlite3
 import typing as _t
 
 from ..ahfakit.apckit.taskrunner import TaskRunner
-from ..ahfakit.datautil.recordcollection import RecordCollection
 from .. import gconfig
 from ..event import EventType, subscribe
 from .dbapi import *
 
 connection: sqlite3.Connection = None  # type: ignore
 cursor: sqlite3.Cursor = None  # type: ignore
-registries = RecordCollection(Registry)
 
 tr = TaskRunner()
 tr.start()
@@ -73,12 +71,14 @@ class _SqliteDBApi(DBApi):
 
     @staticmethod
     def login(session: Session, user: User):
-        cursor.execute(f"UPDATE Session SET UserUid={user.uid} WHERE Id='{session.id}'")
+        cursor.execute(
+            f"UPDATE Session SET UserUid={user.uid} WHERE Id='{session.id}'")
         connection.commit()
 
     @staticmethod
     def logout(session: Session):
-        cursor.execute(f"UPDATE Session SET UserUid=null WHERE Id='{session.id}'")
+        cursor.execute(
+            f"UPDATE Session SET UserUid=null WHERE Id='{session.id}'")
         connection.commit()
 
     @staticmethod
@@ -107,30 +107,9 @@ class _SqliteDBApi(DBApi):
         connection.commit()
 
     @staticmethod
-    def get_available_registry(email):
-        registry = registries.get(email)
-        if registry:
-            if registry.is_available():
-                return registry
-            del registries[email]
-        return None
-
-    @staticmethod
-    def create_registry(email, veri_code) -> _t.Union[Registry, None]:
-        if email not in registries:
-            registry = Registry(email=email, veri_code=veri_code)
-            registries.add(registry)
-            return registry
-        return None
-
-    @staticmethod
-    def delete_registry(email):
-        del registries[email]
-
-    @staticmethod
     def get_user(uid: _t.Optional[int] = None, email: _t.Optional[str] = None) -> _t.Union[User, None]:
         condition = f"Uid='{uid}'" if email is None else f"Email='{email}'"
-        cursor.execute("SELECT * FROM \"User\" WHERE " + condition)
+        cursor.execute("SELECT * FROM User WHERE " + condition)
         user = cursor.fetchone()
         if user is None:
             return None
@@ -154,9 +133,26 @@ class _SqliteDBApi(DBApi):
         solt = user.solt
         time = datetime2str(user.time)
         cursor.execute(
-            f"INSERT INTO \"User\" (Email, Password, Solt, Time) VALUES ('{email}', '{password}', '{solt}', '{time}')")
+            f"INSERT INTO User (Email, Password, Solt, Time) VALUES ('{email}', '{password}', '{solt}', '{time}')")
         connection.commit()
         return user
+
+    @staticmethod
+    def reset_password(email: str, password: str) -> bool:
+        new_user = generate_user(email, password)
+        cursor.execute(
+            f"UPDATE User SET Password='{new_user.password}', Solt='{new_user.solt}' WHERE Email='{email}'")
+        if cursor.rowcount == 0:
+            return False
+        connection.commit()
+        return True
+
+    @staticmethod
+    def update_user_info(user: User, name: _t.Optional[str]) -> bool:
+        if name is None:
+            return False
+        cursor.execute(f"UPDATE User SET Name='{name}' WHERE Uid={user.uid}")
+        return cursor.rowcount == 1
 
     @staticmethod
     def get_data_accounts(user: User) -> _t.Tuple[Account, ...]:
@@ -184,7 +180,8 @@ class _SqliteDBApi(DBApi):
             password=password,
             note=note,
         )
-        cursor.execute(f"SELECT Id FROM Account WHERE UserUid={uid} ORDER BY Id DESC LIMIT 1")
+        cursor.execute(
+            f"SELECT Id FROM Account WHERE UserUid={uid} ORDER BY Id DESC LIMIT 1")
         account.id = cursor.fetchone()[0]
         return account
 
@@ -242,21 +239,6 @@ class SqliteDBApi(_SqliteDBApi):
 
     @staticmethod
     @tr.proxy()
-    def get_available_registry(email):
-        return _SqliteDBApi.get_available_registry(email)
-
-    @staticmethod
-    @tr.proxy()
-    def create_registry(email, veri_code) -> _t.Union[Registry, None]:
-        return _SqliteDBApi.create_registry(email, veri_code)
-
-    @staticmethod
-    @tr.proxy()
-    def delete_registry(email):
-        return _SqliteDBApi.delete_registry(email)
-
-    @staticmethod
-    @tr.proxy()
     def get_user(uid: _t.Optional[int] = None, email: _t.Optional[str] = None) -> _t.Union[User, None]:
         return _SqliteDBApi.get_user(uid, email)
 
@@ -264,6 +246,16 @@ class SqliteDBApi(_SqliteDBApi):
     @tr.proxy()
     def create_user(email: str, password: str) -> _t.Union[User, None]:
         return _SqliteDBApi.create_user(email, password)
+
+    @staticmethod
+    @tr.proxy()
+    def reset_password(email: str, password: str) -> bool:
+        return _SqliteDBApi.reset_password(email, password)
+
+    @staticmethod
+    @tr.proxy()
+    def update_user_info(user: User, name: _t.Optional[str]) -> bool:
+        return _SqliteDBApi.update_user_info(user, name)
 
     @staticmethod
     @tr.proxy()

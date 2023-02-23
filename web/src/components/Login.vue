@@ -200,8 +200,8 @@ const awaitVerify = ref(false)
         </div>
       </label>
       <label class="input-container" :data-valid="formL.isValid.email">
-        <input class="input-box" type="text" name="" id="email" v-model="user.email" @focusin="formL.focusin.email"
-          @focusout="formL.focusout.email" @input="formL.validate.email">
+        <input class="input-box" type="text" name="" id="email" autocomplete="off" v-model="user.email" @focusin="formL.focusin.email"
+          @focusout="formL.focusout.email" @input="formL.validate.email" @keydown="">
         <div class="input-title" :data-active="formL.actived.email">
           <span>邮箱</span>
           <span class="input-hint">{{ formL.hintText.email }}</span>

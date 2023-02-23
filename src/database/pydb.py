@@ -2,7 +2,7 @@
 
 import typing as _t
 
-from ..ahfakit.datautil.recordcollection import RecordCollectionsIO, RecordCollection, registry_type
+from ..ahfakit.datautil.recordcollection import RecordCollectionsIO, registry_type
 from ..event import EventType, subscribe
 from .. import gconfig
 from .dbapi import *
@@ -17,7 +17,6 @@ collections = RecordCollectionsIO()
 sessions = collections.get(Session)
 users = collections.get(User)
 accounts = collections.get(Account)
-registries = RecordCollection(Registry)
 
 
 def init():
@@ -70,27 +69,6 @@ class PyDBApi(DBApi):
         collections.save()
 
     @staticmethod
-    def get_available_registry(email):
-        registry = registries.get(email)
-        if registry:
-            if registry.is_available():
-                return registry
-            del registries[email]
-        return None
-
-    @staticmethod
-    def create_registry(email, veri_code) -> _t.Union[Registry, None]:
-        if email not in registries:
-            registry = Registry(email=email, veri_code=veri_code)
-            registries.add(registry)
-            return registry
-        return None
-
-    @staticmethod
-    def delete_registry(email):
-        del registries[email]
-
-    @staticmethod
     def get_user(uid: _t.Optional[int] = None, email: _t.Optional[str] = None) -> _t.Union[User, None]:
         if uid is not None:
             return users.get(uid)
@@ -107,6 +85,23 @@ class PyDBApi(DBApi):
         users.add(user)
         collections.save()
         return user
+
+    @staticmethod
+    def reset_password(email: str, password: str) -> bool:
+        user = PyDBApi.get_user(email=email)
+        if user is None:
+            return False
+        new_user = generate_user(email, password)
+        user.password = new_user.password
+        user.solt = new_user.solt
+        return True
+
+    @staticmethod
+    def update_user_info(user: User, name: _t.Optional[str]) -> bool:
+        if name is None:
+            return False
+        user.name = name
+        return True
 
     @staticmethod
     def get_data_accounts(user):

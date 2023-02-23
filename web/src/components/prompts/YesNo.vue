@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { UnwrapNestedRefs } from 'vue';
+import { UnwrapNestedRefs } from 'vue'
+import Close from '../icons/Close.vue'
 
 var emit = defineEmits(['close', 'cancel', 'confirm'])
 
@@ -30,11 +31,12 @@ function close() {
 <template>
   <div class="main z-50 absolute left-0 top-0 flex w-full h-full justify-center items-center bg-neutral-500 bg-opacity-5 transition-all" :data-opened="status.opened"
     :class="status.opened ? 'opacity-100' : 'opacity-0'">
-    <div class="shadow-2xl space-y-6 flex flex-col justify-center items-center max-w-full px-16 p-8 pb-6 rounded-2xl bg-white">
+    <div class="relative shadow-2xl flex flex-col justify-center items-center max-w-full px-16 p-8 pb-6 rounded-2xl bg-white">
+      <Close class="absolute top-3 right-6" @click="close"></Close>
       <div>
         <slot></slot>
       </div>
-      <div class="space-x-5 flex justify-center items-center w-full">
+      <div class="space-x-5 flex justify-center items-center w-full mt-6">
         <div v-if="no" class="flex justify-start w-full">
           <div class="px-4 py-1 rounded-md bg-gray-200 cursor-pointer" @click="cancel">{{ no }}</div>
         </div>

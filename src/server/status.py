@@ -23,3 +23,7 @@ S_OUT_OF_LIMIT_ERROR = {"status": 404}
 S_PASSWORD_ERROR = {"status": 405}
 
 S_EMAIL_ERROR = {"status": 406}
+
+S_AUTHENTICATION_ERROR = {"status": 600}
+
+S_VERIFICATION_ERROR = {"status": 601}

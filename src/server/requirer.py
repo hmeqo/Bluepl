@@ -1,5 +1,7 @@
 import json
 import hashlib
+import random
+import string
 import traceback
 import typing as _t
 
@@ -132,3 +134,7 @@ def veri_session(json_data: _t.Dict[str, _t.Any]):
         return {"error": True, "data": S_SESSION_ERROR}
     else:
         return {"error": False, "data": result}
+
+
+def get_random_veri_code(k=8):
+    return "".join(random.choices(string.hexdigits, k=k)).upper()

@@ -139,6 +139,14 @@ export const webapi = reactive({
         return await webapi.postData('/user/had', { uid, email })
     },
 
+    async resetPassword(email: string, password?: string, veriCode?: string) {
+        return await webapi.postData('/user/resetpassword', { email, password, veriCode })
+    },
+
+    async updateUserInfo(name?: string) {
+        return await webapi.postUserData('/user/updateinfo', { name })
+    },
+
     async getUserInfo() {
         return await webapi.postUserData('/user/info', {})
     },
@@ -183,6 +191,7 @@ export const user = reactive({
     // 登录信息
     server: localStorage.getItem('sessionServer') || servers[0].strAddr,
     email: localStorage.getItem('sessionEmail') || '',
+    password: '',
 
     uid: 0,
     name: '',

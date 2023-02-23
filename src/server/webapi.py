@@ -1,22 +1,23 @@
 import hashlib
-import random
-import string
 import re
 import typing as _t
 
 from flask import render_template, send_file, send_from_directory, request
+
+from src.ahfakit.datautil.recordcollection import NONE_TYPE
 
 from ..ahfakit.simplecrypto.dh import DH
 from ..ahfakit.datautil.form import DictForm, Field, ListForm
 from .. import gconfig
 from ..emailsender.smtp import send_verification_code
 from .status import *
-from . import requirer
 from .app import app
+from . import requirer
 from .requirer import get_dbapi
 
 pattern_email = re.compile(r"^\d+@\w+\.\w+|test$")
-pattern_password = re.compile(r"^[\w `~!@#$%^&*()_+-=\[\]{}|\\;:'\",<.>/?]*$")
+pattern_password = re.compile(
+    r"^[\w `~!@#$%^&*()_+-=\[\]{}|\\;:'\",<.>/?]{4,32}$")
 
 
 @app.route("/favicon.ico")
@@ -106,35 +107,20 @@ def app_login(json_data: dict):
             return S_WAIT_VERIFY
         if veri_code.upper() == registry.veri_code:
             # 验证成功后注册
-            user = dbapi.create_user(registry.email, password)
+            user = dbapi.create_user(email, password)
             if user is None:
                 return S_USER_ALREADY_EXISTS
-            dbapi.delete_registry(registry.email)
+            dbapi.delete_registry(email)
             dbapi.login(requirer.get_session(), user)
             return S_SUCCESS_200
         return S_WAIT_VERIFY
-    # # 本地端直接注册无需验证
-    # if request.host.split(":")[0] == "127.0.0.1":
-    #     dbapi.create_user(email, password)
-    #     if user is None:
-    #         return S_USER_ALREADY_EXISTS
-    #     dbapi.login(requirer.get_session(), user)
-    #     return S_SUCCESS_200
     # 生成验证码, 发送邮件
-    veri_code = "".join(random.choices(string.hexdigits, k=8)).upper()
+    veri_code = requirer.get_random_veri_code()
     status = send_verification_code([email], veri_code)
     if status == S_NOT_INTERNET_ERROR:
         return S_NOT_INTERNET_ERROR
     dbapi.create_registry(email, veri_code)
     return S_WAIT_VERIFY
-
-
-@app.route("/logout", methods=["POST"])
-@requirer.require_login
-def app_logout(*_):
-    dbapi = get_dbapi()
-    dbapi.logout(requirer.get_session())
-    return S_SUCCESS_200
 
 
 @app.route("/user/had", methods=["POST"])
@@ -145,8 +131,8 @@ def app_logout(*_):
 }))
 def app_had_user(json_data: dict):
     dbapi = get_dbapi()
-    uid = json_data["uid"]
-    email = json_data["email"]
+    uid: _t.Union[int, None] = json_data["uid"]
+    email: str = json_data["email"]
     had_user = False
     if uid is not None:
         had_user = dbapi.get_user(uid=uid) is not None
@@ -155,10 +141,52 @@ def app_had_user(json_data: dict):
     return {**S_SUCCESS_200, "hadUser": had_user}
 
 
-@app.route("/verification/<path:code>")
-def app_verification(code):
-    # TODO
-    pass
+@app.route("/user/resetpassword", methods=["POST"])
+@requirer.require_ensure_response
+@requirer.require_json_data(DictForm({
+    "email": Field(str),
+    "password": Field((str, NONE_TYPE), validator=lambda x: bool(pattern_password.match(x))),
+    "veriCode": Field((str, NONE_TYPE)),
+}))
+def app_user_reset_password(json_data: dict):
+    dbapi = get_dbapi()
+    email: str = json_data["email"]
+    resetrecord = dbapi.get_available_resetrecord(email)
+    if not resetrecord:
+        veri_code = requirer.get_random_veri_code()
+        dbapi.create_resetrecord(email, veri_code)
+        return S_WAIT_VERIFY
+
+    veri_code: _t.Union[str, None] = json_data["veriCode"]
+    password: _t.Union[str, None] = json_data["password"]
+    if veri_code is None:
+        return S_WAIT_VERIFY
+    if veri_code != resetrecord.veri_code:
+        return S_VERIFICATION_ERROR
+    if password is None:
+        return S_PASSWORD_ERROR
+
+    dbapi.reset_password(email, password)
+    return S_SUCCESS_200
+
+
+@app.route("/logout", methods=["POST"])
+@requirer.require_login
+def app_logout(*_):
+    dbapi = get_dbapi()
+    dbapi.logout(requirer.get_session())
+    return S_SUCCESS_200
+
+
+@app.route("/user/updateinfo", methods=["POST"])
+@requirer.require_login
+@requirer.require_json_data(DictForm({
+    "name": Field((str, NONE_TYPE)),
+}))
+def app_user_update_info(json_data: dict):
+    dbapi = get_dbapi()
+    dbapi.update_user_info(requirer.get_user(), name=json_data["name"])
+    return S_SUCCESS_200
 
 
 @app.route("/user/info", methods=["POST"])

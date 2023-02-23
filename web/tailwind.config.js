@@ -5,7 +5,7 @@ module.exports = {
     './public/**/*.html',
     './src/**/*.{js,jsx,ts,tsx,vue}',
   ],
-  darkMode: 'class',
+  darkMode: 'media',
   theme: {
     extend: {
       screens: {

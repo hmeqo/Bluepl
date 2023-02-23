@@ -23,3 +23,7 @@ export const S_OUT_OF_LIMIT_ERROR = 404
 export const S_PASSWORD_ERROR = 405
 
 export const S_EMAIL_ERROR = 406
+
+export const S_AUTHENTICATION_ERROR = 600
+
+export const S_VERIFICATION_ERROR = 601

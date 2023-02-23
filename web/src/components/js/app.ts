@@ -1,5 +1,5 @@
 import { reactive } from "vue";
-import { accountType, session, user, webapi } from "./globals";
+import { accountType, user, webapi } from "./globals";
 import { S_NOT_INTERNET_ERROR, S_SUCCESS_200 } from "./status";
 
 export function getAccountById(accountId: number) {
@@ -30,8 +30,9 @@ export const app = reactive({
     async requestSession() {
         var response = await webapi.getSessionInfo()
         if (response.status == S_SUCCESS_200) {
-            if (response.logined) {
-                user.logined = true
+            user.logined = response.logined
+            if (!user.logined && user.password) {
+                await app.login(user.email, user.password)
             }
             return true
         }
@@ -46,6 +47,7 @@ export const app = reactive({
         var status: number = (await webapi.login(email, password, veriCode)).status
         if (status == S_SUCCESS_200) {
             user.save_account()
+            user.password = password
             user.logined = true
         } else {
             user.logined = false
@@ -66,6 +68,14 @@ export const app = reactive({
             return false
         }
         return response.hadUser == true
+    },
+
+    async resetPassword(email: string, password: string) {
+        // TODO
+    },
+
+    async updateUserInfo(name: string) {
+        return (await webapi.updateUserInfo(name)).status == S_SUCCESS_200
     },
 
     async getUserInfo() {

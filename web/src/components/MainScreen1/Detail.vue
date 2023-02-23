@@ -3,11 +3,11 @@ import { ref, watch, reactive, Ref, UnwrapNestedRefs } from 'vue';
 import Description from './Description.vue'
 import Back from '../icons/Back.vue'
 import Save from '../icons/Save.vue'
-import Delete from '../icons/Delete.vue'
+import Close from '../icons/Close.vue'
 import YesNoPrompt from '../prompts/YesNo.vue'
 import { app, getAccountById, getPlatformUrl } from '../js/app'
-import { accountType, webapi } from '../js/globals'
-import { S_SUCCESS_200 } from '../js/status'
+import { accountType } from '../js/globals'
+import { isMobile } from '../js/util'
 
 const hasChange = ref(false)
 
@@ -106,35 +106,60 @@ async function checkDeleteAccount() {
 </script>
 
 <template>
-  <div class="absolute left-0 top-0 flex flex-col w-full h-full m-0 rounded-none bg-white">
-    <div class="flex pt-4 px-4">
-      <div class="flex justify-center items-center">
-        <Back @click="back"></Back>
+  <div class="com-detail absolute top-0 grid justify-center items-center w-full h-full transition-all duration-300"
+    :class="app.currentAccountId != -1 ? 'left-0 opacity-100' : 'left-full opacity-0 slab:left-0'"
+    :data-opened="app.currentAccountId != -1">
+    <div style="max-height: 560px" class="z-10 flex flex-col w-full h-full bg-white overflow-hidden shadow-xl slab:w-96 slab:h-4/5 slab:rounded-lg">
+      <div class="flex pt-4 px-4">
+        <div class="flex justify-center items-center">
+          <Back v-if="isMobile" @click="back"></Back>
+        </div>
+        <div class="flex justify-center place-items-center">
+          <Save v-if="hasChange" class="mx-8" @click="() => save()"></Save>
+        </div>
+        <div class="flex justify-center items-center ml-auto">
+          <Close v-if="!isMobile" @click="back"></Close>
+        </div>
       </div>
-      <div class="flex justify-center items-center ml-auto">
-        <Save v-if="hasChange" class="mx-8" @click="() => save()"></Save>
+      <div class="z-10 flex items-center shrink-0 shadow-md p-4">
+        <img class="w-12 h-12 mx-2 object-contain shrink-0" :src="getPlatformUrl(accountRecord.platform)" alt="">
+        <div class="flex w-full h-full ml-4s" :title="accountRecord.platform">
+          <Description class="w-full" v-model="accountRecord.platform" :horizontal="true">平台</Description>
+        </div>
       </div>
-      <div class="flex justify-center items-center">
-        <Delete class="w-8 h-8" @click="checkDeleteAccount"></Delete>
+      <div class="space-y-4 p-4 h-full overflow-auto bg-gray-50">
+        <Description v-model="accountRecord.account">账号</Description>
+        <Description v-model="accountRecord.password">密码</Description>
+        <Description v-model="accountRecord.note" :multiline="true">备注</Description>
+        <div class="flex justify-center px-4 py-2 bg-red-500 text-white rounded-lg cursor-pointer"
+          @click="checkDeleteAccount">
+          删除
+        </div>
       </div>
+      <YesNoPrompt :status="yesNoPromptStatus" :yes="'保存'" :no="'不保存'" @confirm="() => save(true)" @cancel="close">
+        是否保存修改
+      </YesNoPrompt>
+      <YesNoPrompt :status="deletePromptStatus" :yes="'删除'" @confirm="deleteAccount" @close="closeDeletePrompt">
+        确认删除
+      </YesNoPrompt>
     </div>
-    <div class="z-10 flex items-center shrink-0 shadow-md p-4">
-      <img class="w-12 h-12 mx-2 object-contain shrink-0" :src="getPlatformUrl(accountRecord.platform)" alt="">
-      <div class="flex w-full h-full ml-4s" :title="accountRecord.platform">
-        <Description class="w-full" v-model="accountRecord.platform" :horizontal="true">平台</Description>
-      </div>
+    <div class="absolute left-0 top-0 w-full h-full bg-neutral-500 bg-opacity-5" @click="back">
     </div>
-    <div class="space-y-4 p-4 h-full overflow-auto bg-gray-50">
-      <Description v-model="accountRecord.account">账号</Description>
-      <Description v-model="accountRecord.password">密码</Description>
-      <Description v-model="accountRecord.note" :multiline="true">备注</Description>
-    </div>
-    <YesNoPrompt :status="yesNoPromptStatus" :yes="'保存'" :no="'不保存'" @confirm="() => save(true)" @cancel="close">
-      是否保存修改
-    </YesNoPrompt>
-    <YesNoPrompt :status="deletePromptStatus" :yes="'删除'" @confirm="deleteAccount"
-      @close="closeDeletePrompt">
-      确认删除
-    </YesNoPrompt>
   </div>
 </template>
+
+<style scoped>
+@keyframes con-detail {
+  100% {
+    visibility: hidden;
+  }
+}
+
+.com-detail:not([data-opened="true"]) {
+  animation: 0.3s linear forwards con-detail;
+}
+
+.com-detail-slab {
+  @apply left-0 bg-red-500;
+}
+</style>
