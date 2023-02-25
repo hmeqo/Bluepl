@@ -1,9 +1,7 @@
-from src.database import pydb
-from src.server import app
+from src.initialize import init
 from src.event import EventType, emit
-from src import gconfig
+from src.database.pydb import PyDBApi
+from src.server import app
 
-pydb.init()
-
-gconfig.init()
+init(PyDBApi)
 emit(EventType.START)

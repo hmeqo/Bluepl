@@ -1,13 +1,11 @@
 from src.platform_android import BrowserApp
-from src.database import pydb
-from src import gconfig
+from src.database.pydb import PyDBApi
+from src.initialize import init
 from src.event import EventType, emit
-
-pydb.init()
 
 
 def main():
-    gconfig.init()
+    init(PyDBApi)
     emit(EventType.START)
     BrowserApp().run()
 

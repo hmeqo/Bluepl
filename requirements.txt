@@ -1,5 +1,4 @@
-flask==2.0.2
-Werkzeug==2.0.2
+flask
 
 # Windows
 

@@ -7,19 +7,16 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-body {
-    @apply fixed w-full h-full bg-primary-900 whitespace-nowrap overflow-hidden;
-}
-
 #app {
-    @apply grid w-full h-full;
+    @apply fixed flex flex-col w-full h-full;
 }
 
+div,
 input,
 button,
 select,
 textarea {
-    @apply border-0 outline-none;
+    @apply border-0 outline-0;
 }
 
 .flex-full-prompt {

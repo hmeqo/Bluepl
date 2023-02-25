@@ -7,10 +7,12 @@ from __future__ import annotations
 import datetime
 import typing as _t
 
+from src.event import EventType, subscribe
+
 from ..ahfakit.datautil.recordcollection import NONE_TYPE, AutoincProperty, RecordProperty, Record, RecordCollection
 from ..ahfakit.simplecrypto.aes import AES
 
-api: _t.Type[DBApi]
+api: _t.Type[DBApi] = None  # type: ignore
 
 
 def set_dbapi(__api: _t.Type[DBApi]):
@@ -20,6 +22,18 @@ def set_dbapi(__api: _t.Type[DBApi]):
 
 def get_dbapi():
     return api
+
+
+@subscribe(EventType.DATABASE_OPENED)
+def on_db_opened():
+    user = api.create_user("test", "267763")
+    if user:
+        api.create_data_account(
+            user, "QQ", "MyQQAccount", "MyQQPassword", "我的QQ账号"
+        )
+        api.create_data_account(
+            user, "微信", "13344455667", "12345678", "我的微信账号"
+        )
 
 
 class DBApi(object):
@@ -75,12 +89,12 @@ class DBApi(object):
         raise NotImplementedError
 
     @staticmethod
-    def update_data_accounts(user: User, account_list: _t.Iterable[dict]):
+    def update_data_account(user: User, account_dict: dict):
         """更新 account 数据"""
         raise NotImplementedError
 
     @staticmethod
-    def delete_data_accounts(user: User, account_ids: _t.Iterable[int]):
+    def delete_data_account(user: User, account_id: int):
         """删除 account 数据"""
         raise NotImplementedError
 
@@ -202,7 +216,7 @@ def time_not_expired(time_: datetime.datetime, age: int) -> bool:
     return False
 
 
-def generate_user(email: str, password: str) -> User:
+def generate_user(email: str, password: str, uid: _t.Optional[int] = None) -> User:
     """生成一个用户实例"""
     import random
     import string
@@ -210,7 +224,7 @@ def generate_user(email: str, password: str) -> User:
 
     solt = "".join(random.choices(string.hexdigits, k=16))
     password = hashlib.md5((password + solt).encode()).hexdigest()
-    return User(email=email, password=password, solt=solt)
+    return User(uid=uid, email=email, password=password, solt=solt)
 
 
 registries = RecordCollection(Registry)

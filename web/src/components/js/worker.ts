@@ -2,7 +2,7 @@ import vueWorker from 'simple-web-worker'
 
 export default vueWorker?.create([
     {
-        message: 'session',
+        message: 'dh',
         func: (key?: bigint, e?: bigint, p?: bigint) => {
             const one: bigint = BigInt(1)
 
@@ -152,7 +152,7 @@ export default vueWorker?.create([
             if (key && e && p) {
                 return powmod(key, e, p)
             } else {
-                let p = getRandPrime(BigInt(1024))
+                let p = getRandPrime(BigInt(512))
                 let g = getRandBigInt(p >> one, p - one)
                 let e = getRandBigInt(p >> one, p - one)
                 let key = powmod(g, e, p)

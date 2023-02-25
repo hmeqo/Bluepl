@@ -3,7 +3,7 @@
 import typing as _t
 
 from ..ahfakit.datautil.recordcollection import RecordCollectionsIO, registry_type
-from ..event import EventType, subscribe
+from ..event import EventType, emit, subscribe
 from .. import gconfig
 from .dbapi import *
 
@@ -19,22 +19,10 @@ users = collections.get(User)
 accounts = collections.get(Account)
 
 
-def init():
-    set_dbapi(PyDBApi)
-
-
-@subscribe(EventType.START)
+@subscribe(EventType.INITED)
 def db_open():
     collections.open(gconfig.Files.database)
-    # 添加测试账号
-    user = PyDBApi.create_user("test", "267763")
-    if user:
-        PyDBApi.create_data_account(
-            user, "QQ", "MyQQAccount", "MyQQPassword", "我的QQ账号"
-        )
-        PyDBApi.create_data_account(
-            user, "微信", "13344455667", "12345678", "我的微信账号"
-        )
+    emit(EventType.DATABASE_OPENED)
 
 
 @subscribe(EventType.EXIT)
@@ -82,6 +70,7 @@ class PyDBApi(DBApi):
         if PyDBApi.get_user(email=email):
             return None
         user = generate_user(email, password)
+        user.name = f"uid{user.uid}"
         users.add(user)
         collections.save()
         return user
@@ -91,7 +80,7 @@ class PyDBApi(DBApi):
         user = PyDBApi.get_user(email=email)
         if user is None:
             return False
-        new_user = generate_user(email, password)
+        new_user = generate_user(email, password, uid=user.uid)
         user.password = new_user.password
         user.solt = new_user.solt
         return True
@@ -121,22 +110,23 @@ class PyDBApi(DBApi):
         return account
 
     @staticmethod
-    def update_data_accounts(user, account_list):
+    def update_data_account(user, account_dict: dict):
         uid = user.uid
-        for account_params in account_list:
-            account = accounts[account_params["id"]]
-            if account.user_uid != uid:
-                continue
-            account.platform = account_params.get("platform")
-            account.account = account_params.get("account")
-            account.password = account_params.get("password")
-            account.note = account_params.get("note")
-        collections.save()
+        account = accounts[account_dict["id"]]
+        if account.user_uid == uid:
+            if "platform" in account_dict:
+                account.platform = account_dict["platform"]
+            if "account" in account_dict:
+                account.account = account_dict["account"]
+            if "password" in account_dict:
+                account.password = account_dict["password"]
+            if "note" in account_dict:
+                account.note = account_dict["note"]
+            collections.save()
 
     @staticmethod
-    def delete_data_accounts(user, account_ids):
-        for account_id in account_ids:
-            account = accounts.get(account_id)
-            if account and account.user_uid == user.uid:
-                del accounts[account_id]
-        collections.save()
+    def delete_data_account(user, account_id):
+        account = accounts.get(account_id)
+        if account and account.user_uid == user.uid:
+            del accounts[account_id]
+            collections.save()

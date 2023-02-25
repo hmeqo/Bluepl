@@ -66,8 +66,13 @@ class EventType(_Enum, metaclass=EventTypeMeta):
 
     value: EventTypeWrapper
 
+    INITED = EventTypeWrapper(Event)
+
     # On the application start
     START = EventTypeWrapper(Event)
+
+    DATABASE_OPENED = EventTypeWrapper(Event)
+    
     # On the application exit
     EXIT = EventTypeWrapper(Event)
 
@@ -164,7 +169,9 @@ def emit(eventtype: EventType, *args, **kwds):
     for func in subscribers[eventtype]:
         func(__event)
     if eventtype in (
+            EventType.INITED,
             EventType.START,
+            EventType.DATABASE_OPENED,
             EventType.EXIT):
         del subscribers[eventtype]
 

@@ -3,7 +3,7 @@ import typing as _t
 
 from ..ahfakit.apckit.taskrunner import TaskRunner
 from .. import gconfig
-from ..event import EventType, subscribe
+from ..event import EventType, emit, subscribe
 from .dbapi import *
 
 connection: sqlite3.Connection = None  # type: ignore
@@ -17,7 +17,7 @@ def init():
     set_dbapi(SqliteDBApi)
 
 
-@subscribe(EventType.START)
+@subscribe(EventType.INITED)
 @tr.proxy()
 def db_open():
     global connection, cursor
@@ -50,14 +50,7 @@ CREATE TABLE if not exists Account (
     Password nvarchar(100) NOT NULL DEFAULT '',
     Note     nvarchar(200) NOT NULL DEFAULT ''
 )""")
-    user = _SqliteDBApi.create_user("test", "267763")
-    if user:
-        _SqliteDBApi.create_data_account(
-            user, "QQ", "MyQQAccount", "MyQQPassword", "我的QQ账号"
-        )
-        _SqliteDBApi.create_data_account(
-            user, "微信", "13344455667", "12345678", "我的微信账号"
-        )
+    emit(EventType.DATABASE_OPENED)
 
 
 @subscribe(EventType.EXIT)
@@ -136,6 +129,9 @@ class _SqliteDBApi(DBApi):
         time = datetime2str(user.time)
         cursor.execute(
             f"INSERT INTO User (Email, Password, Solt, Time) VALUES ('{email}', '{password}', '{solt}', '{time}')")
+        cursor.execute(f"SELECT Uid FROM User WHERE Email='{email}' ORDER BY Uid DESC LIMIT 1")
+        uid = cursor.fetchone()[0]
+        cursor.execute(f"UPDATE User SET name='uid{uid}' WHERE Uid={uid}")
         connection.commit()
         return user
 
@@ -154,6 +150,7 @@ class _SqliteDBApi(DBApi):
         if name is None:
             return False
         cursor.execute(f"UPDATE User SET Name='{name}' WHERE Uid={user.uid}")
+        connection.commit()
         return cursor.rowcount == 1
 
     @staticmethod
@@ -188,33 +185,30 @@ class _SqliteDBApi(DBApi):
         return account
 
     @staticmethod
-    def update_data_accounts(user: User, account_list: _t.Iterable[dict]):
+    def update_data_account(user: User, account_dict: dict):
         uid = user.uid
-        for account_params in account_list:
-            id = account_params.get("id")
-            if id is None:
-                continue
+        id = account_dict.get("id")
+        if id is not None:
             sets = []
-            if "platform" in account_params:
-                sets.append(f"Platform='{account_params['platform']}'")
-            if "account" in account_params:
-                sets.append(f"Account='{account_params['account']}'")
-            if "password" in account_params:
-                sets.append(f"Password='{account_params['password']}'")
-            if "note" in account_params:
-                sets.append(f"Note='{account_params['note']}'")
-            if not sets:
-                continue
-            cursor.execute(
-                f"UPDATE Account SET {', '.join(sets)} WHERE id={id} AND UserUid={uid}")
-        connection.commit()
+            if "platform" in account_dict:
+                sets.append(f"Platform='{account_dict['platform']}'")
+            if "account" in account_dict:
+                sets.append(f"Account='{account_dict['account']}'")
+            if "password" in account_dict:
+                sets.append(f"Password='{account_dict['password']}'")
+            if "note" in account_dict:
+                sets.append(f"Note='{account_dict['note']}'")
+            if sets:
+                cursor.execute(
+                    f"UPDATE Account SET {', '.join(sets)} WHERE id={id} AND UserUid={uid}")
+                connection.commit()
 
     @staticmethod
-    def delete_data_accounts(user: User, account_ids: _t.Iterable[int]):
-        for account_id in account_ids:
-            cursor.execute(
-                f"DELETE FROM Account WHERE Id={account_id} AND UserUid={user.uid}")
-        connection.commit()
+    def delete_data_account(user: User, account_id: int):
+        cursor.execute(
+            f"DELETE FROM Account WHERE Id={account_id} AND UserUid={user.uid}")
+        if cursor.rowcount:
+            connection.commit()
 
 
 class SqliteDBApi(_SqliteDBApi):
@@ -271,13 +265,13 @@ class SqliteDBApi(_SqliteDBApi):
 
     @staticmethod
     @tr.proxy()
-    def update_data_accounts(user: User, account_list: _t.Iterable[dict]):
-        return _SqliteDBApi.update_data_accounts(user, account_list)
+    def update_data_account(user: User, account_dict: dict):
+        return _SqliteDBApi.update_data_account(user, account_dict)
 
     @staticmethod
     @tr.proxy()
-    def delete_data_accounts(user: User, account_ids: _t.Iterable[int]):
-        return _SqliteDBApi.delete_data_accounts(user, account_ids)
+    def delete_data_account(user: User, account_id: int):
+        return _SqliteDBApi.delete_data_account(user, account_id)
 
 
 def str2datetime(s: str):

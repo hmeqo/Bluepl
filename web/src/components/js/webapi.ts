@@ -5,29 +5,7 @@ import CryptoJS from 'crypto-js'
 import { sha256hexdigest } from './util'
 import { S_NOT_INTERNET_ERROR, S_SESSION_ERROR, S_SUCCESS_200 } from './status'
 import { app } from './app'
-
-export type accountType = {
-    id: number,
-    platform: string,
-    account: string,
-    password: string,
-    note: string,
-}
-
-export const servers = reactive([
-    {
-        name: '本地',
-        ip: '127.0.0.1',
-        port: 8000,
-        strAddr: '127.0.0.1:8000',
-    },
-    {
-        name: 'AAA',
-        ip: '127.0.0.1',
-        port: 8001,
-        strAddr: '127.0.0.1:8001',
-    },
-])
+import { AccountType } from './types'
 
 export const aes = reactive({
     iv: CryptoJS.enc.Utf8.parse('0102030405060708'),
@@ -57,18 +35,22 @@ export const webapi = reactive({
     onRequestStart: webapiOnRequestStart,
     onRequestEnd: webapiOnRequest,
 
+    /** 请求明文数据 */
     async postData(url: string, data?: Object) {
         for (const i in webapi.onRequestStart)
             webapi.onRequestStart[i]()
         var response = await axios.post(url, data)
-            .then(response => { return response.data })
+            .then(response => {
+                return response.data
+            })
             .catch(() => { return { status: S_NOT_INTERNET_ERROR } })
         for (const i in webapi.onRequestEnd)
             webapi.onRequestEnd[i](response.status)
         return response
     },
 
-    async postUserData(url: string, data?: Object) {
+    /** 请求加密数据 */
+    async postEncryptedData(url: string, data?: Object) {
         for (const i in webapi.onRequestStart)
             webapi.onRequestStart[i]()
         do {
@@ -79,16 +61,16 @@ export const webapi = reactive({
                 digest: digest,
                 data: encryptedData,
             }).then(response => {
-                try {
+                if (response.data instanceof Object) {
+                    return response.data
+                } else {
                     return JSON.parse(aes.decrypt(response.data))
-                } catch (error) {
-                    return { status: S_SESSION_ERROR }
                 }
             }).catch(() => {
                 return { status: S_NOT_INTERNET_ERROR }
             })
             if (response.status == S_SESSION_ERROR) {
-                if (!await app.requestSession()) { break }
+                if (!await app.createSession()) { break }
             }
         } while (response.status == S_SESSION_ERROR);
         for (const i in webapi.onRequestEnd)
@@ -96,13 +78,14 @@ export const webapi = reactive({
         return response
     },
 
-    async getSessionInfo() {
-        return await webapi.postData('/session/info', { id: session.id })
+    /** 获取session状态 */
+    async getSessionStatus() {
+        return await webapi.postData('/session/status', { id: session.id })
     },
 
     async createSession() {
         // 在新线程中计算DH算法所需的 p, g, key
-        var data: bigint[] = await worker?.postMessage('session')
+        var data: bigint[] = await worker?.postMessage('dh')
             .then(async (data: any) => {
                 var responseData = await webapi.postData('/session/create', {
                     g: data.g.toString(),
@@ -117,7 +100,7 @@ export const webapi = reactive({
         if (!data.length) {
             return { status: S_NOT_INTERNET_ERROR }
         }
-        session.key = await worker?.postMessage('session', data)
+        session.key = await worker?.postMessage('dh', data)
             .then(async (key: bigint) => {
                 return (await sha256hexdigest(key.toString())).slice(0, 32)
             })
@@ -127,7 +110,7 @@ export const webapi = reactive({
     },
 
     async login(email: string, password: string, veriCode?: string) {
-        return await webapi.postUserData('/login', {
+        return await webapi.postEncryptedData('/login', {
             email: email,
             password: password,
             veriCode: veriCode,
@@ -135,39 +118,39 @@ export const webapi = reactive({
     },
 
     async logout() {
-        return await webapi.postUserData('/logout', {})
+        return await webapi.postEncryptedData('/logout', {})
     },
 
     async hadUser(uid?: number, email?: string) {
-        return await webapi.postData('/user/had', { uid, email })
+        return await webapi.postEncryptedData('/user/had', { uid, email })
     },
 
     async resetPassword(email: string, password?: string, veriCode?: string) {
-        return await webapi.postData('/user/resetpassword', { email, password, veriCode })
-    },
-
-    async updateUserInfo(name?: string) {
-        return await webapi.postUserData('/user/updateinfo', { name })
+        return await webapi.postEncryptedData('/user/resetpassword', { email, password, veriCode })
     },
 
     async getUserInfo() {
-        return await webapi.postUserData('/user/info', {})
+        return await webapi.postEncryptedData('/user/info', {})
+    },
+
+    async updateUserInfo(name?: string) {
+        return await webapi.postEncryptedData('/user/updateinfo', { name })
     },
 
     async getDataAccounts() {
-        return await webapi.postUserData('/user/accounts', {})
+        return await webapi.postEncryptedData('/user/accounts', {})
     },
 
-    async createDataAccount() {
-        return await webapi.postUserData('/user/accounts/create', {})
+    async createDataAccount(account?: AccountType) {
+        return await webapi.postEncryptedData('/user/accounts/create', account || {})
     },
 
-    async updateDataAccounts(accounts: Array<accountType>) {
-        return await webapi.postUserData('/user/accounts/update', accounts)
+    async updateDataAccount(account: AccountType) {
+        return await webapi.postEncryptedData('/user/accounts/update', account)
     },
 
-    async deleteDataAccounts(account_ids: Array<number>) {
-        return await webapi.postUserData('/user/accounts/delete', account_ids)
+    async deleteDataAccount(account_id: number) {
+        return await webapi.postEncryptedData('/user/accounts/delete', { "id": account_id })
     },
 })
 
@@ -188,47 +171,8 @@ export const session = reactive({
     },
 })
 
-export const userAccounts: UnwrapNestedRefs<Array<accountType>> = reactive([])
-
-export const user = reactive({
-    // 登录信息
-    server: localStorage.getItem('sessionServer') || servers[0].strAddr,
-    email: localStorage.getItem('sessionEmail') || '',
-    password: '',
-
-    uid: 0,
-    name: '',
-    avatar: '',
-
-    loggingIn: false,
-    // 是否登录成功
-    logined: false,
-
-    data: {
-        accounts: userAccounts,
-        platformToImgUrl: {
-            '': '/logos/unknow.webp',
-            'qq': '/logos/qq.webp',
-            'wechat': '/logos/wechat.webp',
-            '微信': '/logos/wechat.webp',
-        },
-    },
-
-    save_account() {
-        localStorage.setItem('sessionServer', user.server)
-        localStorage.setItem('sessionEmail', user.email)
-    },
-
-    clear_account() {
-        user.data.accounts = []
-        localStorage.clear()
-    },
-})
-
 export default {
-    servers,
     session,
     webapi,
     aes,
-    user,
 }

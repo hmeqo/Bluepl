@@ -9,16 +9,11 @@ from src.server.status import *
 from .. import gconfig, sockutil
 from ..gconfig import Smtp
 
-veri_html = """
-<div style="display: flex; justify-content: center; align-items: center">
-    <div>正在使用此邮箱注册账号</div>
-    <div style="padding: 1rem 2rem; background: #06d;">验证码: {veri_code}</div>
-</div>
-"""
+with open(gconfig.Dirs.templates.joinpath("veri_code.html"), "r", encoding="UTF-8") as file:
+    veri_html = file.read()
 
-veri_link_html = """
-<a href="{veri_link}">验证链接</a>
-"""
+with open(gconfig.Dirs.templates.joinpath("veri_link.html"), "r", encoding="UTF-8") as file:
+    veri_link_html = file.read()
 
 
 def send_verification_code(receivers: _t.List[str], veri_code: str):

@@ -1,34 +1,100 @@
-import { reactive } from "vue";
-import { accountType, user, webapi } from "./globals";
-import { S_NOT_INTERNET_ERROR, S_SESSION_ERROR, S_SUCCESS_200 } from "./status";
+import { reactive, Ref, ref, UnwrapNestedRefs } from "vue"
+import { webapi } from "./webapi"
+import { AccountType } from './types'
+import { S_NOT_INTERNET_ERROR, S_SESSION_ERROR, S_SUCCESS_200 } from "./status"
 
-export function getAccountById(accountId: number) {
-    for (const i in user.data.accounts) {
-        var a = user.data.accounts[i]
-        if (a.id == accountId) {
-            return user.data.accounts[i]
+export const TEMP_ID = -1
+
+export const servers = reactive([
+    {
+        name: '本地',
+        ip: '127.0.0.1',
+        port: 8000,
+        strAddr: '127.0.0.1:8000',
+    },
+    {
+        name: 'AAA',
+        ip: '127.0.0.1',
+        port: 8001,
+        strAddr: '127.0.0.1:8001',
+    },
+])
+
+export const userDataAccounts: UnwrapNestedRefs<Array<AccountType>> = reactive([])
+
+export const user = reactive({
+    server: localStorage.getItem('sessionServer') || servers[0].strAddr,
+    email: localStorage.getItem('sessionEmail') || '',
+    password: '',
+
+    uid: 0,
+    name: '',
+    avatar: '',
+
+    dataAccount: {
+        list: userDataAccounts,
+
+        platformToImgUrl: {
+            '': '/logos/unknow.webp',
+            'qq': '/logos/qq.webp',
+            'wechat': '/logos/wechat.webp',
+            '微信': '/logos/wechat.webp',
+        },
+
+        /** 清空 */
+        clear() {
+            user.dataAccount.list = []
+        },
+
+        /** 通过id获取账号数据 */
+        getById(accountId: number | null) {
+            if (accountId == null) {
+                return user.dataAccount.list[0]
+            }
+            for (const i in user.dataAccount.list) {
+                var account = user.dataAccount.list[i]
+                if (account.id == accountId) {
+                    return user.dataAccount.list[i]
+                }
+            }
+            return user.dataAccount.list[0]
+        },
+
+        /** 获取平台图像url */
+        getPlatformUrl(platform: string | null) {
+            var url = user.dataAccount.platformToImgUrl[platform?.toLowerCase().trim() || '']
+            return url || user.dataAccount.platformToImgUrl['']
         }
-    }
-    return user.data.accounts[0]
-}
+    },
 
-export function getPlatformUrl(platform: string | null) {
-    var url = user.data.platformToImgUrl[platform?.toLowerCase().trim() || '']
-    return url || user.data.platformToImgUrl['']
-}
+    /** 记住当前用户 */
+    record() {
+        localStorage.setItem('sessionServer', user.server)
+        localStorage.setItem('sessionEmail', user.email)
+    },
+})
+
+export const appCurrentAccountId: Ref<number | null> = ref(null)
 
 export const app = reactive({
     inited: false,
 
-    currentAccountId: -1,
+    loggingIn: false,
 
+    logined: false,
+
+    /** 当前要显示详细信息的账号数据id */
+    currentAccountId: appCurrentAccountId,
+
+    /** 初始化 */
     async init() {
-        await app.requestSession()
+        await app.createSession()
         app.inited = true
     },
 
-    async requestSession() {
-        var response = await webapi.getSessionInfo()
+    /** 创建 Session 会话 */
+    async createSession() {
+        var response = await webapi.getSessionStatus()
         if (response.logined) {
             await app.initializeUserData()
             return
@@ -40,37 +106,43 @@ export const app = reactive({
             await app.login(user.email, user.password)
             return true
         }
-        user.logined = false
+        app.logined = false
         return false
     },
 
+    /** 初始化用户数据 */
     async initializeUserData() {
-        user.logined = true
-        user.clear_account()
-        user.save_account()
+        app.logined = true
+        user.dataAccount.clear()
+        user.record()
         await app.getUserInfo()
         await app.getDataAccount()
     },
 
+    /** 登录, 返回状态码 */
     async login(email: string, password: string, veriCode?: string) {
-        user.loggingIn = true
+        app.loggingIn = true
         var status: number = (await webapi.login(email, password, veriCode)).status
         if (status == S_SUCCESS_200) {
+            user.email = email
             user.password = password
             await app.initializeUserData()
         } else {
-            user.logined = false
+            app.logined = false
         }
-        user.loggingIn = false
+        app.loggingIn = false
         return status
     },
 
+    /** 退出登录 */
     async logout() {
         await webapi.logout()
-        user.clear_account()
-        user.logined = false
+        user.password = ''
+        user.dataAccount.clear()
+        app.logined = false
     },
 
+    /** 该用户是否存在 */
     async hadUser(uid?: number, email?: string) {
         var response = await webapi.hadUser(uid, email)
         if (response.status == S_NOT_INTERNET_ERROR) {
@@ -82,14 +154,18 @@ export const app = reactive({
         return response.hadUser == true
     },
 
-    async resetPassword(email: string, password: string) {
+    /** 重置密码 */
+    async resetPassword(email: string, password?: string, veriCode?: string): Promise<number> {
         // TODO
+        return (await webapi.resetPassword(email, password, veriCode)).status
     },
 
+    /** 更新用户信息 */
     async updateUserInfo(name: string) {
         return (await webapi.updateUserInfo(name)).status == S_SUCCESS_200
     },
 
+    /** 获取用户信息 */
     async getUserInfo() {
         var response = await webapi.getUserInfo()
         if (response.status != S_SUCCESS_200) {
@@ -102,6 +178,7 @@ export const app = reactive({
         return true
     },
 
+    /** 获取存储的账号数据 */
     async getDataAccount() {
         var response = await webapi.getDataAccounts()
         if (response.status != S_SUCCESS_200) {
@@ -109,30 +186,36 @@ export const app = reactive({
         }
         var data = response.data
         for (const i in data) {
-            user.data.accounts.push(data[i])
+            user.dataAccount.list.push(data[i])
         }
         return true
     },
 
+    /** 创建一个账号数据 */
     async createDataAccount() {
-        var response = await webapi.createDataAccount()
-        if (response.status != S_SUCCESS_200) {
-            return null
-        }
         var account = {
-            id: response.id,
+            id: TEMP_ID,
             platform: '',
             account: '',
             password: '',
             note: '',
         }
-        user.data.accounts.push(account)
-        app.currentAccountId = response.id
+        user.dataAccount.list.push(account)
+        app.currentAccountId = TEMP_ID
         return account
     },
 
-    async updateDataAccount(accounts: Array<accountType>) {
-        var response = await webapi.updateDataAccounts(accounts)
+    /** 更新账号数据 */
+    async updateDataAccount(account: AccountType) {
+        if (account.id == TEMP_ID) {
+            var response = await webapi.createDataAccount()
+            if (response.status != S_SUCCESS_200) {
+                return false
+            }
+            account.id = response.id
+            return true
+        }
+        var response = await webapi.updateDataAccount(account)
         if (response.status != S_SUCCESS_200) {
             // TODO 数据更新失败
             return false
@@ -140,17 +223,18 @@ export const app = reactive({
         return true
     },
 
-    async deleteDataAccount(account_ids: Array<number>) {
-        var response = await webapi.deleteDataAccounts(account_ids)
-        if (response.status != S_SUCCESS_200) {
-            // TODO 数据更新失败
-            return false
+    /** 删除账号数据 */
+    async deleteDataAccount(account_id: number) {
+        if (account_id != TEMP_ID) {
+            var response = await webapi.deleteDataAccount(account_id)
+            if (response.status != S_SUCCESS_200) {
+                // TODO 数据更新失败
+                return false
+            }
         }
-        user.data.accounts = user.data.accounts.filter((account: accountType) => {
-            for (const i in account_ids) {
-                if (account.id == account_ids[i]) {
-                    return false
-                }
+        user.dataAccount.list = user.dataAccount.list.filter((account: AccountType) => {
+            if (account.id == account_id) {
+                return false
             }
             return true
         })

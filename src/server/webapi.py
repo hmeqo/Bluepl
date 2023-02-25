@@ -2,12 +2,10 @@ import hashlib
 import re
 import typing as _t
 
-from flask import render_template, send_file, send_from_directory, request
-
-from src.ahfakit.datautil.recordcollection import NONE_TYPE
+from flask import render_template, send_file, send_from_directory
 
 from ..ahfakit.simplecrypto.dh import DH
-from ..ahfakit.datautil.form import DictForm, Field, ListForm
+from ..ahfakit.datautil.form import DictForm, Field
 from .. import gconfig
 from ..emailsender.smtp import send_verification_code
 from .status import *
@@ -42,10 +40,11 @@ def app_index():
     return render_template("index.html")
 
 
-@app.route("/session/info", methods=["POST"])
+@app.route("/session/status", methods=["POST"])
 @requirer.require_ensure_response
 @requirer.require_json_data(DictForm({"id": Field(str)}))
-def app_session_info(data: dict):
+def app_session_status(data: dict):
+    """获取session状态"""
     session = get_dbapi().get_available_session(data["id"])
     if session is None:
         return S_SESSION_ERROR
@@ -60,6 +59,7 @@ def app_session_info(data: dict):
     "key": Field((str, int)),
 }))
 def app_session_create(data: dict):
+    """创建session"""
     dbapi = get_dbapi()
     p, g, key = int(data["p"]), int(data["g"]), int(data["key"])
     while True:
@@ -113,7 +113,7 @@ def app_login(json_data: dict):
             dbapi.delete_registry(email)
             dbapi.login(requirer.get_session(), user)
             return S_SUCCESS_200
-        return S_WAIT_VERIFY
+        return S_VERIFICATION_ERROR
     # 生成验证码, 发送邮件
     veri_code = requirer.get_random_veri_code()
     status = send_verification_code([email], veri_code)
@@ -124,12 +124,13 @@ def app_login(json_data: dict):
 
 
 @app.route("/user/had", methods=["POST"])
-@requirer.require_ensure_response
+@requirer.require_aes_parser
 @requirer.require_json_data(DictForm({
     "uid": Field(int, nullable=True),
     "email": Field(str, ""),
 }))
 def app_had_user(json_data: dict):
+    """判断用户是否存在"""
     dbapi = get_dbapi()
     uid: _t.Union[int, None] = json_data["uid"]
     email: str = json_data["email"]
@@ -142,26 +143,28 @@ def app_had_user(json_data: dict):
 
 
 @app.route("/user/resetpassword", methods=["POST"])
-@requirer.require_ensure_response
+@requirer.require_aes_parser
 @requirer.require_json_data(DictForm({
     "email": Field(str),
-    "password": Field((str, NONE_TYPE), validator=lambda x: bool(pattern_password.match(x))),
-    "veriCode": Field((str, NONE_TYPE)),
+    "password": Field(str, nullable=True, validator=lambda x: bool(pattern_password.match(x))),
+    "veriCode": Field(str, nullable=True),
 }))
 def app_user_reset_password(json_data: dict):
+    """重置密码"""
     dbapi = get_dbapi()
     email: str = json_data["email"]
     resetrecord = dbapi.get_available_resetrecord(email)
     if not resetrecord:
         veri_code = requirer.get_random_veri_code()
         dbapi.create_resetrecord(email, veri_code)
+        send_verification_code([email], veri_code)
         return S_WAIT_VERIFY
 
     veri_code: _t.Union[str, None] = json_data["veriCode"]
     password: _t.Union[str, None] = json_data["password"]
     if veri_code is None:
         return S_WAIT_VERIFY
-    if veri_code != resetrecord.veri_code:
+    if veri_code.upper() != resetrecord.veri_code:
         return S_VERIFICATION_ERROR
     if password is None:
         return S_PASSWORD_ERROR
@@ -173,25 +176,16 @@ def app_user_reset_password(json_data: dict):
 @app.route("/logout", methods=["POST"])
 @requirer.require_login
 def app_logout(*_):
+    """退出登录"""
     dbapi = get_dbapi()
     dbapi.logout(requirer.get_session())
-    return S_SUCCESS_200
-
-
-@app.route("/user/updateinfo", methods=["POST"])
-@requirer.require_login
-@requirer.require_json_data(DictForm({
-    "name": Field((str, NONE_TYPE)),
-}))
-def app_user_update_info(json_data: dict):
-    dbapi = get_dbapi()
-    dbapi.update_user_info(requirer.get_user(), name=json_data["name"])
     return S_SUCCESS_200
 
 
 @app.route("/user/info", methods=["POST"])
 @requirer.require_login
 def app_user_info(*_):
+    """获取用户信息"""
     user = requirer.get_user()
     return {**S_SUCCESS_200, "data": {
         "uid": user.uid,
@@ -201,9 +195,22 @@ def app_user_info(*_):
     }}
 
 
+@app.route("/user/updateinfo", methods=["POST"])
+@requirer.require_login
+@requirer.require_json_data(DictForm({
+    "name": Field(str, nullable=True),
+}))
+def app_user_update_info(json_data: dict):
+    """更新用户信息"""
+    dbapi = get_dbapi()
+    dbapi.update_user_info(requirer.get_user(), name=json_data["name"])
+    return S_SUCCESS_200
+
+
 @app.route("/user/accounts", methods=["POST"])
 @requirer.require_login
 def app_user_data_accounts(*_):
+    """获取全部账号数据"""
     dbapi = get_dbapi()
     accounts = [
         {
@@ -226,7 +233,8 @@ def app_user_data_accounts(*_):
     "password": Field(str, "", validator=lambda x: len(x) < 100),
     "note": Field(str, "", validator=lambda x: len(x) < 200),
 }))
-def app_user_data_create_account(json_data: dict):
+def app_user_data_account_create(json_data: dict):
+    """添加账号数据"""
     dbapi = get_dbapi()
     user = requirer.get_user()
     return {**S_SUCCESS_200, "id": dbapi.create_data_account(
@@ -237,25 +245,27 @@ def app_user_data_create_account(json_data: dict):
 
 @app.route("/user/accounts/update", methods=["POST"])
 @requirer.require_login
-@requirer.require_json_data(ListForm(
-    DictForm({
-        "id": Field(int),
-        "platform": Field(str, "", validator=lambda x: len(x) < 50),
-        "account": Field(str, "", validator=lambda x: len(x) < 50),
-        "password": Field(str, "", validator=lambda x: len(x) < 100),
-        "note": Field(str, "", validator=lambda x: len(x) < 200),
-    })
-))
-def app_user_data_update_accounts(json_data: _t.List[dict]):
+@requirer.require_json_data(DictForm({
+    "id": Field(int),
+    "platform": Field(str, "", validator=lambda x: len(x) < 50),
+    "account": Field(str, "", validator=lambda x: len(x) < 50),
+    "password": Field(str, "", validator=lambda x: len(x) < 100),
+    "note": Field(str, "", validator=lambda x: len(x) < 200),
+}))
+def app_user_data_accounts_update(json_data: dict):
+    """更新账号数据"""
     dbapi = get_dbapi()
-    dbapi.update_data_accounts(requirer.get_user(), json_data)
+    dbapi.update_data_account(requirer.get_user(), json_data)
     return S_SUCCESS_200
 
 
 @app.route("/user/accounts/delete", methods=["POST"])
 @requirer.require_login
-@requirer.require_json_data(ListForm(Field(int)))
-def app_user_data_delete_account(json_data: _t.List[int]):
+@requirer.require_json_data(DictForm({
+    "id": Field(int),
+}))
+def app_user_data_account_delete(json_data: dict):
+    """删除账号数据"""
     dbapi = get_dbapi()
-    dbapi.delete_data_accounts(requirer.get_user(), json_data)
+    dbapi.delete_data_account(requirer.get_user(), json_data["id"])
     return S_SUCCESS_200

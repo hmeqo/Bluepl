@@ -42,6 +42,9 @@ def set_user(user: User):
     current_user = user
 
 
+ResultType = _t.TypeVar("ResultType")
+
+
 def require_json_data(form: Form):
     """装饰器, 获取并验证dict, 返回无误的dict或错误response"""
     def get_func(func: _t.Callable[[_t.Any], dict]):
@@ -59,18 +62,31 @@ def require_json_data(form: Form):
     return get_func
 
 
+def require_json_data2(form: Form):
+    """返回tuple的版本"""
+    def get_func(func: _t.Callable[[_t.Any], tuple[bool, dict]]):
+        def wrapper(data: _t.Union[dict, list, None] = None) -> tuple[bool, dict[str, _t.Any]]:
+            data = request.get_json() if data is None else data
+            if data is None or not isinstance(data, (dict, list)):
+                return False, S_PARAM_ERROR
+            try:
+                d = form.parse(data)
+            except ValueError:
+                return False, S_PARAM_ERROR
+            return func(d)
+        wrapper.__name__ = func.__name__
+        return wrapper
+    return get_func
+
+
 def require_aes_parser(func: _t.Callable[[_t.Any], _t.Union[dict, Response]]):
     """装饰器, 解析aes会话获取数据, 返回值为 Response"""
     def wrapper() -> Response:
-        veri_result = veri_session()
-
-        data = veri_result["data"]
-        if veri_result["error"]:
-            response = app.make_response(data)
-            # response.data = session.encrypt(response.data)
-            return response
+        success, data = veri_session()
+        if not success:
+            return app.make_response(data)
         session = get_session()
-
+        
         response = func(data)
         if not isinstance(response, Response):
             response = app.make_response(response)
@@ -108,33 +124,33 @@ def require_ensure_response(func: _t.Callable[..., _t.Union[Response, dict]]):
     return wrapper
 
 
-@require_json_data(DictForm({
+@require_json_data2(DictForm({
     "sessionId": Field(str),
     "digest": Field(str),
     "data": Field(str)
 }))
-def veri_session(json_data: _t.Dict[str, _t.Any]):
+def veri_session(json_data: dict):
     """验证session"""
     # 获取session并判断session是否正常
     session_id = json_data["sessionId"]
     digest = json_data["digest"]
     session = get_dbapi().get_available_session(session_id)
     if not session:
-        return {"error": True, "data": {**S_SESSION_ERROR, "expired": True}}
+        return False, {**S_SESSION_ERROR, "expired": True}
     set_session(session)
     # 验证摘要
     data: bytes = json_data["data"].encode()
     if digest != hashlib.sha256(session.key + data).hexdigest():
-        return {"error": True, "data": S_SESSION_ERROR}
+        return False, S_SESSION_ERROR
     try:
         decrypted = session.decrypt(data)
         result = json.loads(decrypted)
     except Exception:
         traceback.print_exc()
-        return {"error": True, "data": S_SESSION_ERROR}
-    else:
-        return {"error": False, "data": result}
+        return False, S_SESSION_ERROR
+    return True, result
 
 
 def get_random_veri_code(k=8):
+    """获取随机大写验证码"""
     return "".join(random.choices(string.hexdigits, k=k)).upper()
