@@ -64,8 +64,8 @@ def require_json_data(form: Form):
 
 def require_json_data2(form: Form):
     """返回tuple的版本"""
-    def get_func(func: _t.Callable[[_t.Any], tuple[bool, dict]]):
-        def wrapper(data: _t.Union[dict, list, None] = None) -> tuple[bool, dict[str, _t.Any]]:
+    def get_func(func: _t.Callable[[_t.Any], _t.Tuple[bool, dict]]):
+        def wrapper(data: _t.Union[dict, list, None] = None) -> _t.Tuple[bool, _t.Dict[str, _t.Any]]:
             data = request.get_json() if data is None else data
             if data is None or not isinstance(data, (dict, list)):
                 return False, S_PARAM_ERROR
