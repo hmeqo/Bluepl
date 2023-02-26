@@ -136,9 +136,10 @@ dmypy.json
 .kivy_venv
 .venv*
 
-# configure
+# configure and build
 config.py
 src/gconfig/config.py
+*.iss
 
 # runserver
 uwsgi.pid
