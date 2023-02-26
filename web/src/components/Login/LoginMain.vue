@@ -44,8 +44,6 @@ const mbridgeEmail = reactive({
   },
 })
 
-if (mbridgeEmail.value) { mbridgeEmail.validate() }
-
 const mbridgePassword = reactive({
   id: 'login-password',
   type: 'password',
@@ -139,8 +137,7 @@ async function login() {
   }
 
   props.status.loading = true
-  var status = await app.login(mbridgeEmail.value, mbridgePassword.value, mbridgeVeriCode.value)
-  
+  var status = await app.login(mbridgeEmail.value, mbridgePassword.value, mbridgeVeriCode.value)  
   switch (status) {
     case S_EMAIL_ERROR:
       mbridgeEmail.hintText = '邮箱错误'
@@ -159,6 +156,10 @@ async function login() {
       break
   }
   props.status.loading = false
+}
+
+onload = () => {
+  if (mbridgeEmail.value) { mbridgeEmail.validate() }
 }
 </script>
 

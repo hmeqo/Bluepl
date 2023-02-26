@@ -1,9 +1,9 @@
 from flask import Flask
-from .. import gconfig
+from ..gconfig import Dirs
 
 app = Flask(
     __name__,
-    template_folder=str(gconfig.Dirs.webroot),
-    root_path=str(gconfig.Dirs.root),
+    template_folder=str(Dirs.webroot),
+    root_path=str(Dirs.root),
 )
 app.config["JSON_AS_ASCII"] = False

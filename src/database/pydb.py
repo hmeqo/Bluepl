@@ -4,7 +4,7 @@ import typing as _t
 
 from ..ahfakit.datautil.recordcollection import RecordCollectionsIO, registry_type
 from ..event import EventType, emit, subscribe
-from .. import gconfig
+from ..gconfig import Files
 from .dbapi import *
 
 registry_type(Session)
@@ -21,7 +21,7 @@ accounts = collections.get(Account)
 
 @subscribe(EventType.INITED)
 def db_open():
-    collections.open(gconfig.Files.database)
+    collections.open(Files.database)
     emit(EventType.DATABASE_OPENED)
 
 

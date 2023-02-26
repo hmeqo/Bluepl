@@ -3,7 +3,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-from . import gconfig
+from .gconfig import AppCfg, Dirs
 
 logger = None
 
@@ -23,5 +23,5 @@ def get_logger(logfp):
 
 
 def print_gconfig():
-    print("DIR_PATH:", gconfig.Dirs.root)
-    print("APP_NAME:", gconfig.App.name)
+    print("DIR_PATH:", Dirs.root)
+    print("APP_NAME:", AppCfg.name)

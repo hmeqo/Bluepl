@@ -16,7 +16,7 @@ const status = reactive({
 <template>
   <div class="relative flex justify-center w-full h-full items-center">
     <component :is="tabs[currentTabIndex]"
-      class="flex flex-col p-8 w-full h-full bg-login-900 overflow-hidden slab:max-w-md slab:h-auto slab:shadow-neutral-800 slab:rounded-md slab:shadow-md"
+      class="flex flex-col p-8 w-full h-full bg-login-900 overflow-hidden transition-all slab:max-w-md slab:h-auto slab:shadow-neutral-800 slab:rounded-md slab:shadow-md"
       @back="currentTabIndex = 0" @next="currentTabIndex = 1" :status="status">
     </component>
     <Loading v-if="status.loading"></Loading>

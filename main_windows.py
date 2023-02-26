@@ -1,8 +1,11 @@
+import sys
 import webview
 import psutil
 
+from src.ahfakit.stdlibtools import tlos, tlctypes
 from src.initialize import init
-from src import gconfig, server
+from src import server
+from src.gconfig import AppCfg, Files
 from src.event import EventType, emit
 from src.database.pydb import PyDBApi
 
@@ -10,28 +13,30 @@ from src.database.pydb import PyDBApi
 class App(object):
 
     def __init__(self):
-        self.window = webview.create_window(gconfig.App.name, server.app)
-        self.window._http_port = gconfig.App.port
+        self.window = webview.create_window(AppCfg.name, server.app)
+        self.window._http_port = AppCfg.port
 
     def run(self):
-        webview.start(self.on_start, gui="gtk", debug=gconfig.App.debug)
+        webview.start(self.on_start, gui="gtk", debug=AppCfg.debug)
 
     def on_start(self):
         emit(EventType.START)
 
 
 def main():
-    # gconfig.App.debug = True
+    # 当前非可写入文件夹 以管理员权限打开
+    if not tlctypes.is_admin() and not tlos.writable("."):
+        tlctypes.runas(sys.argv[0])
+        return None
+
     init(PyDBApi)
 
-    with open(gconfig.Files.pidlock, "a+") as file:
+    # 互斥锁 防止重复打开
+    with open(Files.pidlock, "a+") as file:
         file.seek(0)
-        try:
-            pid = int(file.read())
-            if psutil.pid_exists(pid):
-                return None
-        except ValueError:
-            pass
+        pid = file.read()
+        if pid.isdecimal() and psutil.pid_exists(int(pid)):
+            return None
         file.seek(0)
         file.truncate()
         file.write(str(psutil.Process().pid))

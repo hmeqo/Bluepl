@@ -139,7 +139,7 @@ function keyDown(event: KeyboardEvent) {
         </div>
         <div class="flex items-center ml-auto">
           <Save v-if="hasChange" class="mx-8" @click="() => save()"></Save>
-          <Close @click="back"></Close>
+          <Close v-if="!isMobile" @click="back"></Close>
         </div>
       </div>
       <div class="flex flex-col overflow-auto">

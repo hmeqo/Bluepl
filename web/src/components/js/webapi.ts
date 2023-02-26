@@ -70,7 +70,7 @@ export const webapi = reactive({
                 return { status: S_NOT_INTERNET_ERROR }
             })
             if (response.status == S_SESSION_ERROR) {
-                if (!await app.createSession()) { break }
+                if (await app.createSession() == S_NOT_INTERNET_ERROR) { break }
             }
         } while (response.status == S_SESSION_ERROR);
         for (const i in webapi.onRequestEnd)

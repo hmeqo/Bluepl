@@ -18,11 +18,9 @@ import { app, user } from './components/js/app'
 const tabs = [Login, Main]
 
 const currentTabIndex = computed(() => {
-  // if (app.debug) { return 1 }
+  // return 1
   return app.logined ? 1 : 0
 })
-
-app.init()
 </script>
 
 <template>

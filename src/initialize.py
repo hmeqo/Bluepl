@@ -6,6 +6,7 @@ from . import gconfig
 
 
 def init(dbapi: _t.Type[DBApi]):
-    set_dbapi(dbapi)
+    # gconfig.AppCfg.debug = True
     gconfig.init()
+    set_dbapi(dbapi)
     emit(EventType.INITED)

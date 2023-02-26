@@ -6,8 +6,8 @@ from flask import render_template, send_file, send_from_directory
 
 from ..ahfakit.simplecrypto.dh import DH
 from ..ahfakit.datautil.form import DictForm, Field
-from .. import gconfig
-from ..emailsender.smtp import send_verification_code
+from ..gconfig import Files, Dirs
+from ..emailsender import send_verification_code
 from .status import *
 from .app import app
 from . import requirer
@@ -20,13 +20,13 @@ pattern_password = re.compile(
 
 @app.route("/favicon.ico")
 def app_favicon():
-    return send_file(gconfig.Files.icon)
+    return send_file(Files.icon)
 
 
 @app.route("/<path:name>")
 def app_anyurl(name: str):
     # 发送静态文件
-    response = send_from_directory(gconfig.Dirs.webroot, name)
+    response = send_from_directory(Dirs.webroot, name)
     # 如果是 js 文件, 则更改 Content-Type
     if "." in name and name.rsplit(".", 1)[-1] in ("js", "ts"):
         response.headers["Content-Type"] = "text/javascript;charset=utf-8"

@@ -86,30 +86,6 @@ export const app = reactive({
     /** 当前要显示详细信息的账号数据id */
     currentAccountId: appCurrentAccountId,
 
-    /** 初始化 */
-    async init() {
-        await app.createSession()
-        app.inited = true
-    },
-
-    /** 创建 Session 会话 */
-    async createSession() {
-        var response = await webapi.getSessionStatus()
-        if (response.logined) {
-            await app.initializeUserData()
-            return
-        }
-        if (response.status == S_SESSION_ERROR) {
-            response = await webapi.createSession()
-        }
-        if (response.status == S_SUCCESS_200 && user.password) {
-            await app.login(user.email, user.password)
-            return true
-        }
-        app.logined = false
-        return false
-    },
-
     /** 初始化用户数据 */
     async initializeUserData() {
         app.logined = true
@@ -119,8 +95,28 @@ export const app = reactive({
         await app.getDataAccount()
     },
 
+    /** 创建 Session 会话并尝试登录, 返回状态码 */
+    async createSession(): Promise<number> {
+        var response = await webapi.getSessionStatus()
+        if (response.status == S_NOT_INTERNET_ERROR) {
+            return S_NOT_INTERNET_ERROR
+        }
+        if (response.logined) {
+            await app.initializeUserData()
+            return S_SUCCESS_200
+        }
+        if (response.status == S_SESSION_ERROR) {
+            response = await webapi.createSession()
+        }
+        if (response.status == S_SUCCESS_200 && user.password) {
+            return await app.login(user.email, user.password)
+        }
+        app.logined = false
+        return response.status
+    },
+
     /** 登录, 返回状态码 */
-    async login(email: string, password: string, veriCode?: string) {
+    async login(email: string, password: string, veriCode?: string): Promise<number> {
         app.loggingIn = true
         var status: number = (await webapi.login(email, password, veriCode)).status
         if (status == S_SUCCESS_200) {
@@ -143,7 +139,7 @@ export const app = reactive({
     },
 
     /** 该用户是否存在 */
-    async hadUser(uid?: number, email?: string) {
+    async hadUser(uid?: number, email?: string): Promise<boolean | null> {
         var response = await webapi.hadUser(uid, email)
         if (response.status == S_NOT_INTERNET_ERROR) {
             return null
@@ -161,12 +157,12 @@ export const app = reactive({
     },
 
     /** 更新用户信息 */
-    async updateUserInfo(name: string) {
+    async updateUserInfo(name: string): Promise<boolean> {
         return (await webapi.updateUserInfo(name)).status == S_SUCCESS_200
     },
 
     /** 获取用户信息 */
-    async getUserInfo() {
+    async getUserInfo(): Promise<boolean> {
         var response = await webapi.getUserInfo()
         if (response.status != S_SUCCESS_200) {
             return false
@@ -179,7 +175,7 @@ export const app = reactive({
     },
 
     /** 获取存储的账号数据 */
-    async getDataAccount() {
+    async getDataAccount(): Promise<boolean> {
         var response = await webapi.getDataAccounts()
         if (response.status != S_SUCCESS_200) {
             return false
@@ -192,7 +188,7 @@ export const app = reactive({
     },
 
     /** 创建一个账号数据 */
-    async createDataAccount() {
+    async createDataAccount(): Promise<AccountType> {
         var account = {
             id: TEMP_ID,
             platform: '',
@@ -206,7 +202,7 @@ export const app = reactive({
     },
 
     /** 更新账号数据 */
-    async updateDataAccount(account: AccountType) {
+    async updateDataAccount(account: AccountType): Promise<boolean> {
         if (account.id == TEMP_ID) {
             var response = await webapi.createDataAccount()
             if (response.status != S_SUCCESS_200) {
@@ -224,7 +220,7 @@ export const app = reactive({
     },
 
     /** 删除账号数据 */
-    async deleteDataAccount(account_id: number) {
+    async deleteDataAccount(account_id: number): Promise<boolean> {
         if (account_id != TEMP_ID) {
             var response = await webapi.deleteDataAccount(account_id)
             if (response.status != S_SUCCESS_200) {

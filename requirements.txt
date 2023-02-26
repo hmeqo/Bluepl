@@ -4,6 +4,7 @@ flask
 
 pywebview
 cryptography
+psutil
 
 # Android
 

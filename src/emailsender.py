@@ -6,13 +6,13 @@ import typing as _t
 
 from src.server.status import *
 
-from .. import gconfig, sockutil
-from ..gconfig import Smtp
+from . import sockutil
+from .gconfig import AppCfg, Files, Smtp
 
-with open(gconfig.Dirs.templates.joinpath("veri_code.html"), "r", encoding="UTF-8") as file:
+with open(Files.template_veri_code, "r", encoding="UTF-8") as file:
     veri_html = file.read()
 
-with open(gconfig.Dirs.templates.joinpath("veri_link.html"), "r", encoding="UTF-8") as file:
+with open(Files.template_veri_link, "r", encoding="UTF-8") as file:
     veri_link_html = file.read()
 
 
@@ -22,14 +22,14 @@ def send_verification_code(receivers: _t.List[str], veri_code: str):
 
 
 def send_verification_link(receivers: _t.List[str], link: str):
-    link = f"http://{sockutil.get_current_ip()}:{gconfig.App.port}/{link}"
+    link = f"http://{sockutil.get_current_ip()}:{AppCfg.port}/{link}"
     text = veri_link_html.format(veri_link=link)
     return send_text(receivers, text, "Verification link")
 
 
 def send_text(receivers: _t.List[str], text: str, subject: str):
     message = MIMEText(text, "html", "UTF-8")
-    message["From"] = Header(gconfig.App.name, "UTF-8")
+    message["From"] = Header(AppCfg.name, "UTF-8")
     message["To"] = Header("", "UTF-8")
     message["Subject"] = Header(subject, "UTF-8")
     try:

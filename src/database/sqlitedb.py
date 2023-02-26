@@ -2,7 +2,7 @@ import sqlite3
 import typing as _t
 
 from ..ahfakit.apckit.taskrunner import TaskRunner
-from .. import gconfig
+from ..gconfig import Files
 from ..event import EventType, emit, subscribe
 from .dbapi import *
 
@@ -21,7 +21,7 @@ def init():
 @tr.proxy()
 def db_open():
     global connection, cursor
-    connection = sqlite3.connect(gconfig.Files.database)
+    connection = sqlite3.connect(Files.database)
     cursor = connection.cursor()
     cursor.execute("""
 CREATE TABLE if not exists Session (

@@ -136,9 +136,9 @@ dmypy.json
 .kivy_venv
 .venv*
 
-# config build
+# configure
+config.py
 src/gconfig/config.py
-configure.py
 
 # runserver
 uwsgi.pid
@@ -147,6 +147,3 @@ nohup.out
 # data
 data
 resources/app
-
-# output
-output*

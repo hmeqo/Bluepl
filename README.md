@@ -4,23 +4,30 @@
 
 ### Configure
 
+Run the command to add config file
+
+```bash
+python build.py --configure
+```
+
 Configure the config file like
 
 ```python
-# configure.py
+# config.py
 
 class Smtp:
-
     host = "smtp.email.com"
     port = 25
     sender = "123456789@email.com"
     password = "123456789"
+
+...
 ```
 
-Run the python file to configure
+Run the command again to save config
 
 ```bash
-python configure.py
+python build.py --configure
 ```
 
 ### Build web
@@ -28,17 +35,17 @@ python configure.py
 Run this python file to build: `buildweb.py` (on root path)
 
 ```bash
-python buildweb.py
+python build.py --web
 ```
 
 That you can run the main file to use this application
 
 ## Build for Windows
 
-Use pyinstaller
+Use Nuitka
 
 ```bash
-pyinstaller main_windows.py
+python build.py --windows
 ```
 
 ## Run on server
