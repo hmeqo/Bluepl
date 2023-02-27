@@ -4,30 +4,23 @@
 
 ### Configure
 
-Run the command to add config file
+Run the command to initialize this project, will be add settings file
 
 ```bash
-python manage.py --configure
+python manage.py --init
 ```
 
-Configure the config file like
+Configure the settings file like
 
 ```python
-# config.py
+# src/settings.py
 
 class Smtp:
     host = "smtp.email.com"
     port = 25
     sender = "123456789@email.com"
     password = "123456789"
-
 ...
-```
-
-Run the command again to save config
-
-```bash
-python manage.py --configure
 ```
 
 ### Build web

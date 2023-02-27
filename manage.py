@@ -9,7 +9,7 @@ from src.gconfig import AppCfg, Dirs, Files
 argparser = argparse.ArgumentParser()
 
 apg_configure = argparser.add_argument_group(title="Configure")
-apg_configure.add_argument("--configure", action="store_true")
+apg_configure.add_argument("--init", action="store_true")
 
 apg_build = argparser.add_argument_group(title="Build and distribute")
 apg_build.add_argument("--build-web", action="store_true")
@@ -23,6 +23,7 @@ apg_server.add_argument("--stop-server", action="store_true")
 
 
 class Smtp:
+
     # Email services provider host url
     host = ""
     # Port
@@ -34,26 +35,23 @@ class Smtp:
 
 
 class Socket:
+
     # This program use dynamic ip or static ip, if is server, recommended True
     static_ip = False
 
 
-def configure():
+def init():
     global Smtp, Socket
     import inspect
 
-    config_path = Path("config.py")
-    config_is_exists = config_path.exists()
-    if config_is_exists:
-        from config import Smtp, Socket  # type: ignore
-    code = "".join(inspect.getsource(i) for i in (Smtp, Socket))
-    if config_is_exists:
-        dist_path = Path("src/gconfig/config.py")
-        dist_path.write_text(code)
-        print(f"Config saved on {dist_path}")
-    else:
-        config_path.write_text(code)
-        print(f"config.py generated")
+    settings_path = Path("src/settings.py")
+    code = "\n\n".join(inspect.getsource(i) for i in (Smtp, Socket))
+    ask_text = f"{settings_path} is exists, do you want override? (Y/N): "
+    if settings_path.exists() and input(ask_text).lower() != "y":
+        return None
+    settings_path.write_text(code)
+    print(f"{settings_path} generated")
+    return None
 
 
 def build_web():
@@ -105,8 +103,8 @@ def main():
         argparser.print_usage()
         return None
     args = argparser.parse_args(argv)
-    if args.configure:
-        configure()
+    if args.init:
+        init()
     if args.build_web:
         build_web()
     if args.build_nuitka:

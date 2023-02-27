@@ -4,9 +4,12 @@ import os as _os
 from pathlib import Path as _Path
 import sys as _sys
 
-from ..ahfakit.apckit.versioninfo import VersionInfo
-from ..ahfakit.datautil import datamb as _datamb
-from .config import Smtp, Socket  # type: ignore
+from .ahfakit.apckit.versioninfo import VersionInfo
+from .ahfakit.datautil import datamb as _datamb
+try:
+    from .settings import Smtp, Socket  # type: ignore
+except ModuleNotFoundError:
+    pass
 
 
 class AppCfg(object):

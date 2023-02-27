@@ -137,8 +137,7 @@ dmypy.json
 .venv*
 
 # configure and build
-config.py
-src/gconfig/config.py
+src/settings.py
 *.iss
 !setup.iss
 
