@@ -1,6 +1,16 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-import { app, user } from '../js/app'
+import { ref, UnwrapNestedRefs } from 'vue'
+import { app, user } from './js/app'
+import Back from './icons/Back.vue'
+import Close from './icons/Close.vue'
+
+const props = defineProps<{
+  bridge: UnwrapNestedRefs<{
+    showUserHome: boolean
+  }>
+}>()
+
+const showFullImg = ref(false)
 
 const name = ref(user.name)
 
@@ -25,14 +35,30 @@ async function elemNameKeyDown(event: KeyboardEvent) {
     elem?.blur()
   }
 }
+
+function close() {
+  props.bridge.showUserHome = false
+}
 </script>
 
 <template>
-  <div class="flex flex-col w-full h-full p-4">
-    <div class="slab:max-w-sm">
+  <div class="delay-hidden relative flex flex-col w-full h-full p-4 transition-all"
+    :class="bridge.showUserHome ? '-left-full slab:opacity-100' : 'left-0 slab:opacity-0 slab:-left-full'"
+    :data-hidden="!bridge.showUserHome">
+    <div class="flex">
+      <div class="flex">
+        <Back class="block slab:hidden" @click="close"></Back>
+      </div>
+      <div class="flex ml-auto">
+        <Close class="hidden slab:block" @click="close"></Close>
+      </div>
+    </div>
+    <div class="mt-4 slab:max-w-sm">
       <div class="flex bg-white p-4 rounded-md shadow-sm">
         <div class="shrink-0 w-16 h-16 rounded-lg border-gray-100 border-2 border-solid overflow-hidden">
-          <img :src="user.avatar || '/useravatar/default.png'" alt="">
+          <img class="object-contain cursor-pointer"
+            :class="showFullImg ? 'absolute left-0 top-0 w-screen h-screen bg-neutral-500 bg-opacity-40' : ''"
+            :src="user.getAvatar()" alt="" @click="showFullImg = !showFullImg">
         </div>
         <div class="ml-4 flex flex-col w-full overflow-hidden">
           <input

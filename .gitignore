@@ -140,6 +140,7 @@ dmypy.json
 config.py
 src/gconfig/config.py
 *.iss
+!setup.iss
 
 # runserver
 uwsgi.pid

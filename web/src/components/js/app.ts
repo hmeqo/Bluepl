@@ -3,7 +3,7 @@ import { webapi } from "./webapi"
 import { AccountType } from './types'
 import { S_NOT_INTERNET_ERROR, S_SESSION_ERROR, S_SUCCESS_200 } from "./status"
 
-export const TEMP_ID = -1
+export const TEMP_ID = 0
 
 export const servers = reactive([
     {
@@ -39,6 +39,7 @@ export const user = reactive({
             'qq': '/logos/qq.webp',
             'wechat': '/logos/wechat.webp',
             '微信': '/logos/wechat.webp',
+            'steam': '/logos/steam.webp',
         },
 
         /** 清空 */
@@ -72,6 +73,10 @@ export const user = reactive({
         localStorage.setItem('sessionServer', user.server)
         localStorage.setItem('sessionEmail', user.email)
     },
+
+    getAvatar() {
+        return user.avatar || '/useravatar/default.png'
+    }
 })
 
 export const appCurrentAccountId: Ref<number | null> = ref(null)
@@ -79,12 +84,22 @@ export const appCurrentAccountId: Ref<number | null> = ref(null)
 export const app = reactive({
     inited: false,
 
+    loading: false,
+
     loggingIn: false,
 
     logined: false,
 
     /** 当前要显示详细信息的账号数据id */
     currentAccountId: appCurrentAccountId,
+
+    async init() {
+        console.log("INIT")
+        app.loading = true
+        await app.createSession()
+        app.loading = false
+        app.inited = true
+    },
 
     /** 初始化用户数据 */
     async initializeUserData() {
@@ -204,7 +219,7 @@ export const app = reactive({
     /** 更新账号数据 */
     async updateDataAccount(account: AccountType): Promise<boolean> {
         if (account.id == TEMP_ID) {
-            var response = await webapi.createDataAccount()
+            var response = await webapi.createDataAccount(account)
             if (response.status != S_SUCCESS_200) {
                 return false
             }

@@ -117,8 +117,8 @@ def app_login(json_data: dict):
     # 生成验证码, 发送邮件
     veri_code = requirer.get_random_veri_code()
     status = send_verification_code([email], veri_code)
-    if status == S_NOT_INTERNET_ERROR:
-        return S_NOT_INTERNET_ERROR
+    if status != S_SUCCESS_200:
+        return status
     dbapi.create_registry(email, veri_code)
     return S_WAIT_VERIFY
 
@@ -157,7 +157,9 @@ def app_user_reset_password(json_data: dict):
     if not resetrecord:
         veri_code = requirer.get_random_veri_code()
         dbapi.create_resetrecord(email, veri_code)
-        send_verification_code([email], veri_code)
+        status = send_verification_code([email], veri_code)
+        if status != S_SUCCESS_200:
+            return status
         return S_WAIT_VERIFY
 
     veri_code: _t.Union[str, None] = json_data["veriCode"]
@@ -228,18 +230,19 @@ def app_user_data_accounts(*_):
 @app.route("/user/accounts/create", methods=["POST"])
 @requirer.require_login
 @requirer.require_json_data(DictForm({
-    "platform": Field(str, "", validator=lambda x: len(x) < 50),
-    "account": Field(str, "", validator=lambda x: len(x) < 50),
-    "password": Field(str, "", validator=lambda x: len(x) < 100),
-    "note": Field(str, "", validator=lambda x: len(x) < 200),
+    "platform": Field(str, nullable=True, validator=lambda x: len(x) < 50),
+    "account": Field(str, nullable=True, validator=lambda x: len(x) < 50),
+    "password": Field(str, nullable=True, validator=lambda x: len(x) < 100),
+    "note": Field(str, nullable=True, validator=lambda x: len(x) < 200),
 }))
 def app_user_data_account_create(json_data: dict):
     """添加账号数据"""
     dbapi = get_dbapi()
     user = requirer.get_user()
+    print(json_data)
     return {**S_SUCCESS_200, "id": dbapi.create_data_account(
-        user, json_data["platform"], json_data["account"],
-        json_data["password"], json_data["note"],
+        user, json_data.get("platform", ""), json_data.get("account", ""),
+        json_data.get("password", ""), json_data.get("note", ""),
     ).id}
 
 

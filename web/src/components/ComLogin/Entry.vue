@@ -2,7 +2,7 @@
 import { UnwrapNestedRefs } from 'vue'
 
 const props = defineProps<{
-  mbridge: UnwrapNestedRefs<{
+  bridge: UnwrapNestedRefs<{
     id?: string,
     type?: string,
     title: string,
@@ -18,34 +18,34 @@ const props = defineProps<{
 }>()
 
 function focusin() {
-  props.mbridge.activated = true
-  props.mbridge.isFocus = true
-  if (props.mbridge.setFocusin) { props.mbridge.setFocusin() }
+  props.bridge.activated = true
+  props.bridge.isFocus = true
+  if (props.bridge.setFocusin) { props.bridge.setFocusin() }
 }
 
 function focusout() {
-  if (!props.mbridge.value) { props.mbridge.activated = false }
-  props.mbridge.isFocus = false
-  if (props.mbridge.setDefault) { props.mbridge.setDefault() }
+  if (!props.bridge.value) { props.bridge.activated = false }
+  props.bridge.isFocus = false
+  if (props.bridge.setDefault) { props.bridge.setDefault() }
   validate()
 }
 
 function validate() {
-  if (props.mbridge.validate) { props.mbridge.validate() }
-  else { props.mbridge.isValid = true }
+  if (props.bridge.validate) { props.bridge.validate() }
+  else { props.bridge.isValid = true }
 }
 
-if (props.mbridge.setDefault) { props.mbridge.setDefault() }
+if (props.bridge.setDefault) { props.bridge.setDefault() }
 </script>
 
 <template>
-  <label class="input-container" :data-valid="mbridge.isValid">
-    <input class="input-box" :type="mbridge.type || 'text'" name="" :id="mbridge.id || ''" v-model="mbridge.value"
+  <label class="input-container" :data-valid="bridge.isValid">
+    <input class="input-box" :type="bridge.type || 'text'" name="" :id="bridge.id || ''" v-model="bridge.value"
       @focusin="focusin" @focusout="focusout" @input="validate"
-      :autocomplete="mbridge.type == 'password' ? 'off' : 'new-password'">
-    <div class="input-title" :data-active="mbridge.activated">
-      <span>{{ mbridge.title }}</span>
-      <span class="input-hint">{{ mbridge.hintText }}</span>
+      :autocomplete="bridge.type == 'password' ? 'off' : 'new-password'">
+    <div class="input-title" :data-active="bridge.activated">
+      <span>{{ bridge.title }}</span>
+      <span class="input-hint">{{ bridge.hintText }}</span>
     </div>
   </label>
 </template>

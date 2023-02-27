@@ -19,6 +19,8 @@ const yesNoPromptStatus = reactive({ opened: false })
 
 const deletePromptStatus = reactive({ opened: false })
 
+const hintPromptStatus = reactive({ opened: false, hintText: '' })
+
 const currentAccount: Ref<AccountType> = ref({
   id: -1,
   platform: '',
@@ -81,6 +83,8 @@ function back() {
 async function save(close_flag?: boolean) {
   var success = await app.updateDataAccount(accountRecord)
   if (!success) {
+    hintPromptStatus.opened = true
+    hintPromptStatus.hintText = "保存失败"
     return
   }
   hasChange.value = false
@@ -128,18 +132,18 @@ function keyDown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="com-detail z-10 absolute top-0 flex justify-center items-center w-full h-full transition-all"
-    :class="app.currentAccountId != null ? 'left-0 opacity-100' : 'left-full opacity-0 slab:left-0'"
-    :data-opened="app.currentAccountId != null" ref="refRoot" tabindex="0" @keydown="keyDown">
+  <div class="delay-hidden z-10 absolute top-0 flex justify-center items-center w-full h-full transition-all"
+    :class="app.currentAccountId != null ? 'left-0 slab:opacity-100' : 'left-full slab:opacity-0 slab:left-0'"
+    :data-hidden="app.currentAccountId == null" ref="refRoot" tabindex="0" @keydown="keyDown">
     <div
       class="z-10 flex flex-col w-full h-full max-h-full py-4 from-gray-50 to-blue-50 bg-gradient-to-br slab:max-w-lg slab:h-auto slab:rounded-lg slab:shadow-md">
-      <div class="shrink-0 flex items-center w-full px-4 py-2">
+      <div class="shrink-0 flex items-center w-full px-4 mb-4">
         <div class="flex items-center">
-          <Back v-if="isMobile" @click="back"></Back>
+          <Back class="block slab:hidden" @click="back"></Back>
         </div>
         <div class="flex items-center ml-auto">
           <Save v-if="hasChange" class="mx-8" @click="() => save()"></Save>
-          <Close v-if="!isMobile" @click="back"></Close>
+          <Close class="hidden slab:block" @click="back"></Close>
         </div>
       </div>
       <div class="flex flex-col overflow-auto">
@@ -168,21 +172,8 @@ function keyDown(event: KeyboardEvent) {
     <YesNoPrompt :status="deletePromptStatus" :yes="'删除'" @confirm="deleteAccount" @close="closeDeletePrompt">
       确认删除
     </YesNoPrompt>
+    <YesNoPrompt :status="hintPromptStatus" :yes="'确定'">
+      {{ hintPromptStatus.hintText }}
+    </YesNoPrompt>
   </div>
 </template>
-
-<style scoped>
-@keyframes con-detail {
-  100% {
-    visibility: hidden;
-  }
-}
-
-.com-detail:not([data-opened="true"]) {
-  animation: 0.15s linear forwards con-detail;
-}
-
-.com-detail-slab {
-  @apply left-0 bg-red-500;
-}
-</style>

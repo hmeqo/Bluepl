@@ -1,23 +1,27 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
-import MainScreen1 from './MainScreen1/Screen.vue'
-import MainScreen2 from './MainScreen2/Screen.vue'
+import { reactive, ref } from 'vue'
+import UserData from './UserData.vue'
+import UserHome from './UserHome.vue'
 import { isMobile } from './js/util'
 
 const currentTabIndex = ref(0)
+const tabs = [UserData]
+const tabLabels = ['数据']
 
-const tabs = [MainScreen1, MainScreen2]
-const tabLabels = ['数据', '管理']
+const bridge = reactive({
+  showUserHome: false,
+})
 </script>
 
 <template>
   <div class="main flex flex-col w-full h-full box-border overflow-hidden" :data-ismobile="isMobile">
-    <div class="flex w-full h-full overflow-hidden from-gray-100 to-gray-200 bg-gradient-to-br">
-      <component :is="tabs[currentTabIndex]"></component>
+    <div class="tab-pages flex w-full h-full overflow-hidden">
+      <component :is="tabs[currentTabIndex]" :bridge="bridge"></component>
+      <UserHome :bridge="bridge"></UserHome>
     </div>
-    <div class="panels shrink-0 grid grid-cols-2 justify-items-center content-start p-2 text-center bg-white"
+    <div v-if="tabs.length > 1" class="panels shrink-0 grid grid-cols-2 justify-items-center content-start p-2 text-center bg-white"
       :data-current="currentTabIndex">
-      <div v-for="tabIndex in tabs.keys()" class="z-0 relative w-full py-1 rounded-lg cursor-pointer hover:bg-green-50"
+      <div v-for="tabIndex in tabs.keys()" class="w-full py-1 rounded-lg cursor-pointer hover:bg-green-50"
         :data-activated="currentTabIndex == tabIndex" @click="() => currentTabIndex = tabIndex">
         {{ tabLabels[tabIndex] }}
       </div>
@@ -39,6 +43,10 @@ const tabLabels = ['数据', '管理']
 }
 
 .panels>*[data-activated="true"] {
-  @apply bg-green-400
+  @apply bg-green-400;
+}
+
+.tab-pages>* {
+  @apply shrink-0 from-gray-100 to-gray-200 bg-gradient-to-br;
 }
 </style>

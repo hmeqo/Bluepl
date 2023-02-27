@@ -7,7 +7,7 @@
 Run the command to add config file
 
 ```bash
-python build.py --configure
+python manage.py --configure
 ```
 
 Configure the config file like
@@ -27,25 +27,31 @@ class Smtp:
 Run the command again to save config
 
 ```bash
-python build.py --configure
+python manage.py --configure
 ```
 
 ### Build web
 
-Run this python file to build: `buildweb.py` (on root path)
-
 ```bash
-python build.py --web
+python manage.py --build-web
 ```
 
 That you can run the main file to use this application
 
-## Build for Windows
+### Build for Windows
 
-Use Nuitka
+Use Nuitka, if you do not have this package, run `pip install nuitka`
 
 ```bash
-python build.py --windows
+python manage.py --build-windows
+```
+
+### Build setup file
+
+Use Inno Setup, if you do not have installed InnoSetup, please install this from <https://jrsoftware.org/isinfo.php>
+
+```bash
+python manage.py --build-setup
 ```
 
 ## Run on server
@@ -55,13 +61,13 @@ You need the `uwsgi` package
 ### Run server
 
 ```bash
-uwsgi --ini uwsgi.ini
+python manage.py --run-server
 ```
 
 ### Stop server
 
 ```bash
-uwsgi --stop uwsgi.pid
+python manage.py --stop-server
 ```
 
 ## TODO
@@ -71,4 +77,4 @@ uwsgi --stop uwsgi.pid
 - [ ] 判断邮箱是否可用
 - [ ] 指定连接到某个服务器
 - [ ] 上传拉取同步服务器数据
-- [ ] 重置密码
+- [x] 重置密码

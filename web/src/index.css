@@ -22,3 +22,14 @@ textarea {
 .flex-full-prompt {
     @apply z-50 absolute left-0 top-0 flex w-full h-full;
 }
+
+
+@keyframes delay-hidden {
+    100% {
+        visibility: hidden;
+    }
+}
+
+.delay-hidden:not([data-hidden="false"]) {
+    animation: 0.15s linear forwards delay-hidden;
+}

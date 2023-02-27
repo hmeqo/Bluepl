@@ -9,4 +9,11 @@ if (isMobile) {
     // })
 }
 
+addEventListener('dragstart', event => {
+    // 禁止图片拖拽
+    if (event.target.tagName == "IMG") {
+        event.preventDefault()
+    }
+})
+
 createApp(App).mount('#app')

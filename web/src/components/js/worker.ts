@@ -152,7 +152,7 @@ export default vueWorker?.create([
             if (key && e && p) {
                 return powmod(key, e, p)
             } else {
-                let p = getRandPrime(BigInt(512))
+                let p = getRandPrime(BigInt(1024))
                 let g = getRandBigInt(p >> one, p - one)
                 let e = getRandBigInt(p >> one, p - one)
                 let key = powmod(g, e, p)
