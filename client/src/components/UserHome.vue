@@ -42,8 +42,8 @@ function close() {
 </script>
 
 <template>
-  <div class="delay-hidden relative flex flex-col w-full h-full p-4 transition-all"
-    :class="bridge.showUserHome ? '-left-full slab:opacity-100' : 'left-0 slab:opacity-0 slab:-left-full'"
+  <div class="delay-hidden absolute flex flex-col w-full h-full p-4 transition-all"
+    :class="bridge.showUserHome ? 'left-0 slab:opacity-100' : 'left-full slab:opacity-0 slab:left-0'"
     :data-hidden="!bridge.showUserHome">
     <div class="flex">
       <div class="flex">

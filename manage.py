@@ -4,11 +4,11 @@ import shutil
 from pathlib import Path
 import argparse
 
-from src.gconfig import AppConfig, Dirs, Files
+from src.gconfig import AppConfig, Dirs, Files, versioninfo
 
 argparser = argparse.ArgumentParser()
 
-apg_configure = argparser.add_argument_group(title="Configure")
+apg_configure = argparser.add_argument_group(title="Initialization")
 apg_configure.add_argument("--init", action="store_true")
 
 apg_build = argparser.add_argument_group(title="Build and distribute")
@@ -16,6 +16,7 @@ apg_build.add_argument("--build-web", action="store_true")
 apg_build.add_argument("--build-nuitka", action="store_true")
 apg_build.add_argument("--build-pyinstaller", action="store_true")
 apg_build.add_argument("--build-setup", action="store_true")
+apg_build.add_argument('--debug', action='store_true')
 
 apg_server = argparser.add_argument_group(title="Run on server")
 apg_server.add_argument("--run-server", action="store_true")
@@ -25,6 +26,8 @@ apg_dev = argparser.add_argument_group(title='development')
 apg_dev.add_argument('--run-dev', action='store_true')
 
 client_project_path = Path("client")
+distdir = Path('dist')
+distpath = distdir.joinpath(AppConfig.name)
 
 
 class Smtp:
@@ -60,32 +63,32 @@ def init():
 
 
 def build_web():
-    webroot = Dirs.webroot
-
     os.chdir(client_project_path)
     if not Path("node_modules").exists():
         os.system("npm install")
     os.system("npm run build")
     os.chdir("..")
 
-    if webroot.exists():
-        shutil.rmtree(webroot)
-    shutil.move(str(client_project_path.joinpath("dist")), webroot)
+    if Dirs.webroot.exists():
+        shutil.rmtree(Dirs.webroot)
+    shutil.move(client_project_path.joinpath("dist"), Dirs.webroot)
 
 
-def build_windows_with_pyinstaller():
+def build_windows_with_pyinstaller(debug=False):
+    debug_param = '' if debug else '--windowed'
     os.system(
-        f'pyinstaller --noconfirm --onedir --windowed --icon "{Files.icon}" --name "{AppConfig.name}" --add-data "./{Dirs.resources};{Dirs.resources}/"  main_windows.py')
+        f'pyinstaller {debug_param} --noconfirm --onedir --icon "{Files.icon}" --name "{AppConfig.name}" --add-data "./{Dirs.resources};{Dirs.resources}/"  main_windows.py')
 
 
-def build_windows_with_nuitka():
-    distdir = "dist"
-    distpath = f"{distdir}/{AppConfig.name}"
-    if os.path.exists(distpath):
+def build_windows_with_nuitka(debug=False):
+    debug_param = '' if debug else '--windows-disable-console'
+    if distpath.exists():
         shutil.rmtree(distpath)
     os.system(
-        f'nuitka --standalone --windows-disable-console --windows-icon-from-ico="{Files.icon}" --include-data-dir="{Dirs.resources}={Dirs.resources}" --product-name="{AppConfig.name}" --file-version="0.0.1.0" --output-dir="{distdir}" --output-filename="{AppConfig.name}" main_windows.py')
-    os.rename(f"{distdir}/main_windows.dist", distpath)
+        f'nuitka {debug_param} --standalone --windows-icon-from-ico="{Files.icon}" --product-name="{AppConfig.name}" --file-version="{versioninfo.full_version}" --noinclude-default-mode="error" --include-data-dir="{Dirs.resources}={Dirs.resources}" --output-dir="{distdir}" --output-filename="{AppConfig.name}" main_windows.py')
+    path = Path(f"{distdir}/main_windows.dist")
+    if path.exists():
+        path.rename(distpath)
 
 
 def build_setup():
@@ -115,14 +118,16 @@ def main():
     args = argparser.parse_args(argv)
     if args.init:
         init()
+
     if args.build_web:
         build_web()
     if args.build_nuitka:
-        build_windows_with_nuitka()
+        build_windows_with_nuitka(args.debug)
     elif args.build_pyinstaller:
-        build_windows_with_pyinstaller()
+        build_windows_with_pyinstaller(args.debug)
     if args.build_setup:
         build_setup()
+
     if args.run_server:
         run_server()
     if args.stop_server:

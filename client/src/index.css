@@ -8,7 +8,7 @@
 }
 
 #app {
-    @apply fixed flex flex-col w-full h-full;
+    @apply fixed flex flex-col w-full h-full overflow-hidden;
 }
 
 div,

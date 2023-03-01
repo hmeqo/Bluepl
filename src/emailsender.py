@@ -1,13 +1,10 @@
-import traceback
 from smtplib import SMTP
 from email.header import Header
 from email.mime.text import MIMEText
-import typing as _t
-
-from .backend.status import *
 
 from . import sockutil
 from .gconfig import AppConfig, Files, Smtp
+from .backend.status import *
 
 with open(Files.template_veri_code, "r", encoding="UTF-8") as file:
     veri_html = file.read()
@@ -35,12 +32,12 @@ def send_text(receivers: list[str], text: str, subject: str):
     try:
         smtp = SMTP(Smtp.host, Smtp.port)
         smtp.login(Smtp.sender, Smtp.password)
-    except Exception:
-        traceback.print_exc()
+    except Exception as exc:
+        print(exc)
         return S_NOT_INTERNET_ERROR
     try:
         smtp.sendmail(Smtp.sender, receivers, message.as_string())
-    except Exception:
-        traceback.print_exc()
+    except Exception as exc:
+        print(exc)
         return S_EMAIL_ERROR
     return S_SUCCESS_200

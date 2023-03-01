@@ -94,7 +94,6 @@ export const app = reactive({
     currentAccountId: appCurrentAccountId,
 
     async init() {
-        console.log("INIT")
         app.loading = true
         await app.createSession()
         app.loading = false

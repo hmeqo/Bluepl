@@ -1,18 +1,19 @@
 import sys
-import webview
-import psutil
 
+import psutil
+import webview
+
+from src.gconfig import AppConfig, Files
 from src.ahfakit.stdlibtools import tlos, tlctypes
 from src.initialize import init
 from src.backend import webapp
-from src.gconfig import AppConfig, Files
 from src.event import EventType, emit
 
 
 class App(object):
 
     def __init__(self):
-        self.window = webview.create_window(AppConfig.name, webapp.app)
+        self.window = webview.create_window(AppConfig.name, url=webapp.app)
         self.window._http_port = AppConfig.port
 
     def run(self):

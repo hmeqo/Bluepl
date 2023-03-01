@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Bluepl"
-#define MyAppVersion "0.0.3"
+#define MyAppVersion "0.0.4"
 #define MyAppPublisher "hmeqo"
 #define MyAppURL "https://github.com/hmeqo/Bluepl"
 #define MyAppExeName "Bluepl.exe"

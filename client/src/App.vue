@@ -19,7 +19,7 @@ for (var i = 1; i <= 6; i++) {
 const tabs = [Login, Main]
 
 const currentTabIndex = computed(() => {
-  return 1
+  // return 1
   return app.logined ? 1 : 0
 })
 

@@ -46,7 +46,7 @@ def app_session_status(data: dict):
     """获取session状态"""
     session: Session = Session.query.filter(
         Session.id == data['id'],
-        Session.validity < datetime.now(),
+        Session.validity > datetime.now(),
     ).first()
     if not session:
         return S_SESSION_ERROR
@@ -75,7 +75,6 @@ def session_create(json_data: dict):
         t = datetime.now() + timedelta(0, 1800)
         session = Session(id=session_id, aes_key=shared_key, validity=t)
         db.session.add(session)
-        db.session.commit()
         break
     return {**S_SUCCESS_200, 'key': str(dh.step1())}
 
@@ -104,7 +103,7 @@ def login(json_data: dict):
     # 注册
     registry: RecordRegistry = RecordRegistry.query.filter(
         RecordRegistry.email == email,
-        RecordRegistry.validity < datetime.now(),
+        RecordRegistry.validity > datetime.now(),
     ).first()
     if registry:
         if veri_code.upper() != registry.veri_code:
@@ -130,7 +129,6 @@ def login(json_data: dict):
     t = datetime.now() + timedelta(0, 180)
     registry = RecordRegistry(email=email, veri_code=veri_code, validity=t)
     db.session.add(registry)
-    db.session.commit()
     return S_WAIT_VERIFY
 
 
@@ -164,7 +162,7 @@ def user_reset_password(json_data: dict):
     email: str = json_data['email']
     resetpwd: RecordResetPwd = RecordResetPwd.query.filter(
         RecordResetPwd.email == email,
-        RecordResetPwd.validity < datetime.now(),
+        RecordResetPwd.validity > datetime.now(),
     ).fisrt()
     if not resetpwd:
         veri_code = generate_veri_code()
@@ -175,7 +173,6 @@ def user_reset_password(json_data: dict):
         db.session.add(RecordResetPwd(
             email=email, veri_code=veri_code, validity=t
         ))
-        db.session.commit()
         return S_WAIT_VERIFY
 
     veri_code: _t.Union[str, None] = json_data['veriCode']
@@ -190,7 +187,6 @@ def user_reset_password(json_data: dict):
     user = require.user
     user.password = cvt_pwd_md5(user.password, user.solt)
     db.session.add(user)
-    db.session.commit()
     return S_SUCCESS_200
 
 
@@ -201,7 +197,6 @@ def logout(*_):
     """退出登录"""
     require.session.user_uid = None
     db.session.add(require.session)
-    db.session.commit()
     return S_SUCCESS_200
 
 
@@ -234,7 +229,6 @@ def user_update_info(json_data: dict):
     if name is not None:
         require.user.name = name
     db.session.add(require.user)
-    db.session.commit()
     return S_SUCCESS_200
 
 
@@ -279,7 +273,6 @@ def user_data_account_create(json_data: dict):
         note=json_data['note'] or '',
     )
     db.session.add(account)
-    db.session.commit()
     return {
         **S_SUCCESS_200,
         'id': DataAccount.query.filter(
@@ -321,7 +314,6 @@ def user_data_accounts_update(json_data: dict):
     if note is not None:
         data_account.note = note
     db.session.add(data_account)
-    db.session.commit()
     return S_SUCCESS_200
 
 

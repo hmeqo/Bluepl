@@ -1,42 +1,47 @@
-"""版本信息"""
+"""版本信息
 
-from typing import Sequence
+```
+Usage:
+    version_info = VersionInfo(1, 1, 1, 0, "Release", datetime.date(2022, 3, 25))
+    print(version_info.version)
+    print(version_info.release_version)
+    print(version_info.date)
+```
+"""
+
+import datetime
+import typing as _t
 
 
 class VersionInfo(object):
 
     def __init__(
         self,
-        major: int,
-        minor: int,
-        micro: int,
-        releaselevel: str,
-        serial=0,
-        date: Sequence[int] = (0, 0, 0)
+        major=0,
+        minor=0,
+        micro=0,
+        build=0,
+        release: str = 'release',
+        date: _t.Optional[datetime.date] = None,
     ):
         self.major = major
         self.minor = minor
         self.micro = micro
-        self.releaselevel = releaselevel
-        self.serial = serial
-        self.year = date[0]
-        self.month = date[1]
-        self.day = date[2]
-
-        self.version = "%s.%s.%s" % (major, minor, micro)
-        self.release = "%s.%s" % (self.releaselevel, self.serial)
-        self.date = "/".join(map(str, date))
-        self.full_version = self.version + "." + self.release
+        self.build = build
+        self.release = release
+        self.date = date
 
     def __str__(self):
-        return self.full_version
+        return self.version
 
+    @property
+    def version(self):
+        return f'{self.major}.{self.minor}.{self.micro}'
 
-def main():
-    version_info = VersionInfo(1, 1, 1, "Final", date=(2022, 3, 25))
-    print(version_info.full_version)
-    print(version_info.date)
+    @property
+    def full_version(self):
+        return f'{self.version}.{self.build}'
 
-
-if __name__ == "__main__":
-    main()
+    @property
+    def release_version(self):
+        return f'{self.version} {self.release} {self.build}'

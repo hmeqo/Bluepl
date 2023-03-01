@@ -53,7 +53,8 @@ const accounts = computed(() => {
       <div class="shrink-0 flex justify-start ml-auto transition-all"
         :class="searchFocused ? 'w-0 opacity-0' : 'w-9 opacity-100'">
         <div class="shrink-0 flex">
-          <img class="w-8 h-8 object-contain rounded-xl border-2 border-white bg-white shadow-md box-content cursor-pointer"
+          <img
+            class="w-8 h-8 object-contain rounded-xl border-2 border-white bg-white shadow-md box-content cursor-pointer"
             :src="user.getAvatar()" alt="" @click="bridge.showUserHome = true">
         </div>
       </div>

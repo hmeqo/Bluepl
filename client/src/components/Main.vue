@@ -14,8 +14,8 @@ const bridge = reactive({
 </script>
 
 <template>
-  <div class="main flex flex-col w-full h-full box-border overflow-hidden" :data-ismobile="isMobile">
-    <div class="tab-pages flex w-full h-full overflow-hidden">
+  <div class="main flex flex-col w-full h-full box-border from-gray-100 to-gray-200 bg-gradient-to-br" :data-ismobile="isMobile">
+    <div class="tab-pages flex w-full h-full">
       <component :is="tabs[currentTabIndex]" :bridge="bridge"></component>
       <UserHome :bridge="bridge"></UserHome>
     </div>
@@ -47,6 +47,6 @@ const bridge = reactive({
 }
 
 .tab-pages>* {
-  @apply shrink-0 from-gray-100 to-gray-200 bg-gradient-to-br;
+  @apply shrink-0 bg-gray-100;
 }
 </style>

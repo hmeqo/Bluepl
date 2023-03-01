@@ -1,21 +1,19 @@
 """全局配置"""
 
+from datetime import datetime
 import os as _os
 from pathlib import Path as _Path
 import sys as _sys
 
 from .ahfakit.apckit.versioninfo import VersionInfo
 from .ahfakit.datautil import datamb as _datamb
-try:
-    from .settings import Smtp, Socket  # type: ignore
-except ModuleNotFoundError:
-    pass
+from .settings import Smtp, Socket
 
 
 class Dirs(object):
     """目录路径"""
 
-    base = _Path(__file__).parent.parent
+    base = _Path(_sys.argv[0]).parent
     data = _Path("data")
     resources = _Path("resources")
     webroot = resources.joinpath("app")
@@ -49,12 +47,15 @@ class FlaskConfig(object):
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 
 
+# _sys._MEIPASS = Dirs.base  # type: ignore
+
 gconfig = _datamb.ArgMapTree({})
 
-versioninfo = VersionInfo(0, 0, 1, "dev", 0)
+versioninfo = VersionInfo(0, 0, 4, 0, 'Alpha', date=datetime.now().date())
 
 
 def init():
+    print(Dirs.base)
     for path in (i for i in Dirs.__dict__.values() if isinstance(i, _Path)):
         if path.exists():
             continue
