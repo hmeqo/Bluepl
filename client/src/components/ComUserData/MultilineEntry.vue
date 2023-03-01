@@ -6,6 +6,7 @@ const emit = defineEmits(['update:model-value'])
 
 const props = defineProps<{
   modelValue: string,
+  maxLength?: number,
   horizontal?: boolean,
 }>()
 
@@ -42,7 +43,7 @@ const value = computed({
     <div class="border-1 p-1 rounded-lg overflow-hidden w-full bg-white">
       <textarea
         class="flex w-full h-10 px-2 p-1 rounded-md whitespace-normal overflow-hidden resize-none transition-colors focus:bg-gray-100"
-        ref="refTextarea" @input="textareaSizeAdapt" v-model="value"></textarea>
+        ref="refTextarea" @input="textareaSizeAdapt" v-model="value" :maxlength="maxLength"></textarea>
     </div>
   </div>
 </template>

@@ -16,7 +16,7 @@ from .require import RequireJsonData, require_ensure_response, require_login, re
 from .models import RecordRegistry, RecordResetPwd, Session, User, DataAccount
 from .status import *
 from .require import require
-from .util import generate_veri_code, cvt_pwd_md5, validator_email, validator_password
+from .util import generate_veri_code, cvt_pwd_md5, len_limit, validator_email, validator_password
 
 
 @app.route('/favicon.ico')
@@ -56,9 +56,9 @@ def app_session_status(data: dict):
 @app.route('/session/create', methods=['POST'])
 @require_ensure_response
 @RequireJsonData(DictForm({
-    'p': Field((str, int)),
-    'g': Field((str, int)),
-    'key': Field((str, int)),
+    'p': Field((str, int), validator=len_limit(500)),
+    'g': Field((str, int), validator=len_limit(500)),
+    'key': Field((str, int), validator=len_limit(500)),
 }))
 def session_create(json_data: dict):
     """创建session"""
@@ -85,7 +85,7 @@ def session_create(json_data: dict):
 @RequireJsonData(DictForm({
     'email': Field(str, validator=validator_email),
     'password': Field(str, validator=validator_password),
-    'veriCode': Field(str, ''),
+    'veriCode': Field(str, '', validator=len_limit(50)),
 }))
 def login(json_data: dict):
     """登录和注册"""
@@ -137,8 +137,8 @@ def login(json_data: dict):
 @app.route('/user/had', methods=['POST'])
 @require_session
 @RequireJsonData(DictForm({
-    'uid': Field(int, nullable=True),
-    'email': Field(str, nullable=True),
+    'uid': Field(int, nullable=True, validator=len_limit(50)),
+    'email': Field(str, nullable=True, validator=len_limit(50)),
 }))
 def had_user(json_data: dict):
     """判断用户是否存在"""
@@ -157,7 +157,7 @@ def had_user(json_data: dict):
 @RequireJsonData(DictForm({
     'email': Field(str, validator=validator_email),
     'password': Field(str, nullable=True, validator=validator_password),
-    'veriCode': Field(str, nullable=True),
+    'veriCode': Field(str, nullable=True, validator=len_limit(50)),
 }))
 def user_reset_password(json_data: dict):
     """重置密码"""
@@ -226,7 +226,7 @@ def user_info(*_):
 @require_session
 @require_login
 @RequireJsonData(DictForm({
-    'name': Field(str, nullable=True),
+    'name': Field(str, nullable=True, validator=len_limit(32)),
 }))
 def user_update_info(json_data: dict):
     """更新用户信息"""
@@ -263,10 +263,10 @@ def user_data_accounts(*_):
 @require_session
 @require_login
 @RequireJsonData(DictForm({
-    'platform': Field(str, nullable=True, validator=lambda x: len(x) < 50),
-    'account': Field(str, nullable=True, validator=lambda x: len(x) < 50),
-    'password': Field(str, nullable=True, validator=lambda x: len(x) < 100),
-    'note': Field(str, nullable=True, validator=lambda x: len(x) < 200),
+    'platform': Field(str, nullable=True, validator=len_limit(50)),
+    'account': Field(str, nullable=True, validator=len_limit(50)),
+    'password': Field(str, nullable=True, validator=len_limit(100)),
+    'note': Field(str, nullable=True, validator=len_limit(200)),
 }))
 def user_data_account_create(json_data: dict):
     """添加账号数据"""
@@ -295,10 +295,10 @@ def user_data_account_create(json_data: dict):
 @require_login
 @RequireJsonData(DictForm({
     'id': Field(int),
-    'platform': Field(str, nullable=True, validator=lambda x: len(x) < 50),
-    'account': Field(str, nullable=True, validator=lambda x: len(x) < 50),
-    'password': Field(str, nullable=True, validator=lambda x: len(x) < 100),
-    'note': Field(str, nullable=True, validator=lambda x: len(x) < 200),
+    'platform': Field(str, nullable=True, validator=len_limit(50)),
+    'account': Field(str, nullable=True, validator=len_limit(50)),
+    'password': Field(str, nullable=True, validator=len_limit(100)),
+    'note': Field(str, nullable=True, validator=len_limit(200)),
 }))
 def user_data_accounts_update(json_data: dict):
     """更新账号数据"""

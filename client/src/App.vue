@@ -6,20 +6,20 @@ import Loading from './components/Loading/Loading1.vue'
 import NotInternetPrompt from './components/prompts/NotInternet.vue'
 import { app, user } from './components/js/app'
 
-// for (var i = 1; i <= 6; i++) {
-//   user.dataAccount.list.push({
-//     id: -i,
-//     platform: 'steam',
-//     account: '' + -i,
-//     password: '1534u81f38780d398',
-//     note: 'idfijfsocdfjkfvjdiaiapf,fjvm;jafjcaifasdfasfsdafasdpeifowei',
-//   })
-// }
+for (var i = 1; i <= 6; i++) {
+  user.dataAccount.list.push({
+    id: -i,
+    platform: 'steam',
+    account: '' + -i,
+    password: '1534u81f38780d398',
+    note: 'idfijfsocdfjkfvjdiaiapf,fjvm;jafjcaifasdfasfsdafasdpeifowei',
+  })
+}
 
 const tabs = [Login, Main]
 
 const currentTabIndex = computed(() => {
-  // return 1
+  return 1
   return app.logined ? 1 : 0
 })
 

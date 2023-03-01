@@ -23,3 +23,9 @@ def validator_password(s: str):
 
 def cvt_pwd_md5(s: str, solt: str):
     return hashlib.md5((s + solt).encode()).hexdigest()
+
+
+def len_limit(limit: int):
+    def wrapper(value):
+        return len(value) <= limit
+    return wrapper

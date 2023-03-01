@@ -21,6 +21,11 @@ apg_server = argparser.add_argument_group(title="Run on server")
 apg_server.add_argument("--run-server", action="store_true")
 apg_server.add_argument("--stop-server", action="store_true")
 
+apg_dev = argparser.add_argument_group(title='development')
+apg_dev.add_argument('--run-dev', action='store_true')
+
+client_project_path = Path("client")
+
 
 class Smtp:
 
@@ -55,10 +60,9 @@ def init():
 
 
 def build_web():
-    web_project_path = Path("web")
     webroot = Dirs.webroot
 
-    os.chdir(web_project_path)
+    os.chdir(client_project_path)
     if not Path("node_modules").exists():
         os.system("npm install")
     os.system("npm run build")
@@ -66,7 +70,7 @@ def build_web():
 
     if webroot.exists():
         shutil.rmtree(webroot)
-    shutil.move(str(web_project_path.joinpath("dist")), webroot)
+    shutil.move(str(client_project_path.joinpath("dist")), webroot)
 
 
 def build_windows_with_pyinstaller():
@@ -97,6 +101,12 @@ def stop_server():
     os.system("uwsgi --stop uwsgi.pid")
 
 
+def run_dev():
+    os.chdir(client_project_path)
+    os.system('npm run dev')
+    os.chdir('..')
+
+
 def main():
     argv = sys.argv[1:]
     if not argv:
@@ -117,6 +127,8 @@ def main():
         run_server()
     if args.stop_server:
         stop_server()
+    if args.run_dev:
+        run_dev()
     return None
 
 

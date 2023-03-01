@@ -7,6 +7,7 @@ const props = defineProps<{
     type?: string,
     title: string,
     value: string,
+    maxLength?: number,
     activated: boolean,
     isFocus: boolean,
     isValid: boolean,
@@ -42,7 +43,7 @@ if (props.bridge.setDefault) { props.bridge.setDefault() }
   <label class="input-container" :data-valid="bridge.isValid">
     <input class="input-box" :type="bridge.type || 'text'" name="" :id="bridge.id || ''" v-model="bridge.value"
       @focusin="focusin" @focusout="focusout" @input="validate"
-      :autocomplete="bridge.type == 'password' ? 'off' : 'new-password'">
+      :autocomplete="bridge.type == 'password' ? 'off' : 'new-password'" :maxlength="bridge.maxLength">
     <div class="input-title" :data-active="bridge.activated">
       <span>{{ bridge.title }}</span>
       <span class="input-hint">{{ bridge.hintText }}</span>

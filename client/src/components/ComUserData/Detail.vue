@@ -150,13 +150,13 @@ function keyDown(event: KeyboardEvent) {
         <div class="shrink-0 flex items-center p-4">
           <img class="shrink-0 w-12 h-12 mx-2 object-contain" :src="user.dataAccount.getPlatformUrl(accountRecord.platform)" alt="">
           <div class="flex w-full h-full ml-4s" :title="accountRecord.platform">
-            <MultilineEntry v-model="accountRecord.platform" :horizontal="true">平台</MultilineEntry>
+            <MultilineEntry v-model="accountRecord.platform" :max-length="50" :horizontal="true">平台</MultilineEntry>
           </div>
         </div>
         <div class="grid p-4" ref="refEntryContainer">
-          <MultilineEntry v-model="accountRecord.account" :horizontal="!isMobile">账号</MultilineEntry>
-          <MultilineEntry class="mt-6" v-model="accountRecord.password" :horizontal="!isMobile">密码</MultilineEntry>
-          <MultilineEntry class="mt-6" v-model="accountRecord.note" :horizontal="!isMobile">备注</MultilineEntry>
+          <MultilineEntry v-model="accountRecord.account" :max-length="50" :horizontal="!isMobile">账号</MultilineEntry>
+          <MultilineEntry class="mt-6" v-model="accountRecord.password" :max-length="100" :horizontal="!isMobile">密码</MultilineEntry>
+          <MultilineEntry class="mt-6" v-model="accountRecord.note" :max-length="200" :horizontal="!isMobile">备注</MultilineEntry>
           <button class="flex justify-center mt-10 px-4 py-2 w-full bg-red-600 text-white rounded-md transition-colors hover:bg-red-700 focus:outline-1"
             @click="checkDeleteAccount">
             删除

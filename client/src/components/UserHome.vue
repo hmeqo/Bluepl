@@ -63,7 +63,7 @@ function close() {
         <div class="ml-4 flex flex-col w-full overflow-hidden">
           <input
             class="overflow-hidden text-ellipsis transition-all rounded-md px-2 py-1 w-full hover:bg-gray-50 focus:bg-gray-200"
-            type="text" name="" id="" v-model="name" @focusout="submitName" @keydown="elemNameKeyDown">
+            type="text" name="" id="" v-model="name" @focusout="submitName" @keydown="elemNameKeyDown" :maxlength="32">
         </div>
       </div>
       <div class="flex justify-center shadow-sm rounded-md px-4 py-2 mt-4 bg-white cursor-pointer" @click="logout">

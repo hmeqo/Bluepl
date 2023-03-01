@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from .webapp import db
-from sqlalchemy import Column, BINARY, INTEGER, DateTime, ForeignKey, Integer, CHAR, String
+from sqlalchemy import Column, BINARY, INTEGER, DateTime, ForeignKey, CHAR, String
 
 
 class Session(db.Model):
@@ -35,8 +33,8 @@ class DataAccount(db.Model):
     user_uid = db.Column(INTEGER, ForeignKey('user.uid'))
     platform = db.Column(String(50), default='')
     account = db.Column(String(50), default='')
-    password = db.Column(String(50), default='')
-    note = db.Column(String(50), default='')
+    password = db.Column(String(100), default='')
+    note = db.Column(String(200), default='')
 
 
 class RecordRegistry(db.Model):
