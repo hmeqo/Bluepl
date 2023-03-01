@@ -110,7 +110,7 @@ class Subscriber(object):
 ExpectCallable = _t.Union[_t.Callable[[Event], _t.Any], _t.Callable[[], _t.Any], Subscriber]
 ExpectCallback = _t.TypeVar("ExpectCallback", ExpectCallable, ExpectCallable)
 
-subscribers: _t.DefaultDict[EventType, _t.List[Subscriber]] = _defaultdict(list)
+subscribers: _t.DefaultDict[EventType, list[Subscriber]] = _defaultdict(list)
 
 
 @_t.overload

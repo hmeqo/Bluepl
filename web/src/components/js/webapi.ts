@@ -110,7 +110,7 @@ export const webapi = reactive({
     },
 
     async login(email: string, password: string, veriCode?: string) {
-        return await webapi.postEncryptedData('/login', {
+        return await webapi.postEncryptedData('/user/login', {
             email: email,
             password: password,
             veriCode: veriCode,
@@ -118,7 +118,7 @@ export const webapi = reactive({
     },
 
     async logout() {
-        return await webapi.postEncryptedData('/logout', {})
+        return await webapi.postEncryptedData('/user/logout', {})
     },
 
     async hadUser(uid?: number, email?: string) {

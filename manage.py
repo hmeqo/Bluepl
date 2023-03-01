@@ -4,7 +4,7 @@ import shutil
 from pathlib import Path
 import argparse
 
-from src.gconfig import AppCfg, Dirs, Files
+from src.gconfig import AppConfig, Dirs, Files
 
 argparser = argparse.ArgumentParser()
 
@@ -71,16 +71,16 @@ def build_web():
 
 def build_windows_with_pyinstaller():
     os.system(
-        f'pyinstaller --noconfirm --onedir --windowed --icon "{Files.icon}" --name "{AppCfg.name}" --add-data "./{Dirs.resources};{Dirs.resources}/"  main_windows.py')
+        f'pyinstaller --noconfirm --onedir --windowed --icon "{Files.icon}" --name "{AppConfig.name}" --add-data "./{Dirs.resources};{Dirs.resources}/"  main_windows.py')
 
 
 def build_windows_with_nuitka():
     distdir = "dist"
-    distpath = f"{distdir}/{AppCfg.name}"
+    distpath = f"{distdir}/{AppConfig.name}"
     if os.path.exists(distpath):
         shutil.rmtree(distpath)
     os.system(
-        f'nuitka --standalone --windows-disable-console --windows-icon-from-ico="{Files.icon}" --include-data-dir="{Dirs.resources}={Dirs.resources}" --product-name="{AppCfg.name}" --file-version="0.0.1.0" --output-dir="{distdir}" --output-filename="{AppCfg.name}" main_windows.py')
+        f'nuitka --standalone --windows-disable-console --windows-icon-from-ico="{Files.icon}" --include-data-dir="{Dirs.resources}={Dirs.resources}" --product-name="{AppConfig.name}" --file-version="0.0.1.0" --output-dir="{distdir}" --output-filename="{AppConfig.name}" main_windows.py')
     os.rename(f"{distdir}/main_windows.dist", distpath)
 
 

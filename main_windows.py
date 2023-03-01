@@ -4,20 +4,19 @@ import psutil
 
 from src.ahfakit.stdlibtools import tlos, tlctypes
 from src.initialize import init
-from src import server
-from src.gconfig import AppCfg, Files
+from src.backend import webapp
+from src.gconfig import AppConfig, Files
 from src.event import EventType, emit
-from src.database.pydb import PyDBApi
 
 
 class App(object):
 
     def __init__(self):
-        self.window = webview.create_window(AppCfg.name, server.app)
-        self.window._http_port = AppCfg.port
+        self.window = webview.create_window(AppConfig.name, webapp.app)
+        self.window._http_port = AppConfig.port
 
     def run(self):
-        webview.start(self.on_start, gui="gtk", debug=AppCfg.debug)
+        webview.start(self.on_start, gui="gtk", debug=AppConfig.debug)
 
     def on_start(self):
         emit(EventType.START)
@@ -29,7 +28,7 @@ def main():
         tlctypes.runas(sys.argv[0])
         return None
 
-    init(PyDBApi)
+    init()
 
     # 互斥锁 防止重复打开
     with open(Files.pidlock, "a+") as file:

@@ -12,18 +12,10 @@ except ModuleNotFoundError:
     pass
 
 
-class AppCfg(object):
-    """应用信息"""
-
-    debug = False
-    name = "Bluepl"
-    port = 27640
-
-
 class Dirs(object):
     """目录路径"""
 
-    root = _Path(_sys.argv[0]).parent
+    base = _Path(__file__).parent.parent
     data = _Path("data")
     resources = _Path("resources")
     webroot = resources.joinpath("app")
@@ -39,6 +31,22 @@ class Files(object):
     database = Dirs.data.joinpath("bluepl.db")
     template_veri_code = Dirs.templates.joinpath("veri_code.html")
     template_veri_link = Dirs.templates.joinpath("veri_link.html")
+
+
+class AppConfig(object):
+    """应用信息"""
+
+    debug = False
+    name = "Bluepl"
+    port = 27640
+
+
+class FlaskConfig(object):
+
+    JSON_AS_ASCII = False
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{Files.database.absolute()}'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_COMMIT_ON_TEARDOWN = True
 
 
 gconfig = _datamb.ArgMapTree({})

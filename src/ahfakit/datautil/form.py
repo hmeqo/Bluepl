@@ -50,16 +50,15 @@ class Field(object):
                 value = self.default
         return isinstance(value, self._type) and all(f(value) for f in self.validators)
 
-    def parse(self, value, ignore_error=False):
+    def parse(self, value) -> _t.Tuple[bool, _t.Any]:
         if value is None:
             if self.nullable:
-                return None
+                return True, None
             elif self.default is not None:
                 value = self.default
         if isinstance(value, self._type) and all(f(value) for f in self.validators):
-            return value
-        if not ignore_error:
-            raise ValueError(value)
+            return True, value
+        return False, None
 
     @property
     def type(self):
@@ -71,7 +70,7 @@ class Form(object):
     def validate(self, items: _t.Optional[_t.Any] = None) -> bool:
         raise NotImplementedError
 
-    def parse(self, items: _t.Optional[_t.Any] = None, ignore_error=True) -> _t.Any:
+    def parse(self, items: _t.Optional[_t.Any] = None) -> _t.Tuple[bool, _t.Any]:
         raise NotImplementedError
 
 
@@ -89,18 +88,16 @@ class DictForm(Form):
             return False
         return all(item.validate(items.get(k)) for k, item in self.fields.items())
 
-    def parse(self, items: _t.Optional[dict] = None, ignore_error=True):
-        try:
-            if not isinstance(items, dict):
-                raise ValueError
-            return {
-                name: field.parse(items.get(name), ignore_error=False)
-                for name, field in self.fields.items()
-            }
-        except ValueError as e:
-            if ignore_error:
-                return None
-            raise e
+    def parse(self, items: _t.Optional[dict] = None) -> _t.Tuple[bool, _t.Dict[str, _t.Any]]:
+        results = {}
+        if not isinstance(items, dict):
+            return False, results
+        for name, field in self.fields.items():
+            success, result = field.parse(items.get(name))
+            if not success:
+                return False, results
+            results[name] = result
+        return True, results
 
 
 class ListForm(Form):
@@ -113,15 +110,16 @@ class ListForm(Form):
             return False
         return all(self.field.validate(i) for i in items)
 
-    def parse(self, items: _t.Optional[list] = None, ignore_error=True):
-        try:
-            if not isinstance(items, list):
-                raise ValueError
-            return [self.field.parse(i, ignore_error=False) for i in items]
-        except ValueError as e:
-            if ignore_error:
-                return None
-            raise e
+    def parse(self, items: _t.Optional[list] = None) -> _t.Tuple[bool, _t.List[_t.Any]]:
+        results = []
+        if not isinstance(items, list):
+            return False, results
+        for i in items:
+            success, result = self.field.parse(i)
+            if not success:
+                return False, results
+            results.append(result)
+        return True, results
 
 
 ExpectField = _t.Union[Field, DictForm, ListForm]

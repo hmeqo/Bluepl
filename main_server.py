@@ -1,7 +1,8 @@
+from src.gconfig import FlaskConfig
 from src.initialize import init
 from src.event import EventType, emit
-from src.database.pydb import PyDBApi
-from src.server import app
+from src.backend.webapp import app
 
-init(PyDBApi)
+FlaskConfig.SQLALCHEMY_DATABASE_URI = 'mysql://root:mysql@127.0.0.1:3306/bluepl'
+init()
 emit(EventType.START)

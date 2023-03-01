@@ -7,8 +7,7 @@ from __future__ import annotations
 import datetime
 import typing as _t
 
-from src.event import EventType, subscribe
-
+from ..event import EventType, subscribe
 from ..ahfakit.datautil.recordcollection import NONE_TYPE, AutoincProperty, RecordProperty, Record, RecordCollection
 from ..ahfakit.simplecrypto.aes import AES
 

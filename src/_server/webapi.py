@@ -74,7 +74,7 @@ def app_session_create(data: dict):
     return {**S_SUCCESS_200, "key": str(dh.step1())}
 
 
-@app.route("/login", methods=["POST"])
+@app.route("/user/login", methods=["POST"])
 @requirer.require_aes_parser
 @requirer.require_json_data(DictForm({
     "email": Field(str, validator=lambda x: bool(pattern_email.match(x)) and len(x) <= 50),
@@ -175,7 +175,7 @@ def app_user_reset_password(json_data: dict):
     return S_SUCCESS_200
 
 
-@app.route("/logout", methods=["POST"])
+@app.route("/user/logout", methods=["POST"])
 @requirer.require_login
 def app_logout(*_):
     """退出登录"""
